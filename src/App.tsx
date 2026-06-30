@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import Settings from './Settings';
 
-// Strict Data Contract for TypeScript Compilation
 interface WeatherData {
   temperature: number;
   windspeed: number;
@@ -18,7 +18,6 @@ interface ThemeConfig {
   bgClass: string;
 }
 
-// Localization Dictionary Matrix
 const TRANSLATIONS: Record<string, any> = {
   en: {
     brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
@@ -47,16 +46,19 @@ const TRANSLATIONS: Record<string, any> = {
 };
 
 export default function UltimateWeatherDashboard() {
-  // Application State Management
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [city, setCity] = useState<string>('Delhi');
+  
+  // Audio Engine Configurations Setup
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [rate, setRate] = useState<number>(0.95);
+  const [pitch, setPitch] = useState<number>(1.05);
 
-  // 1. Core Logic: Fetch Weather, Geocoding & Air Quality APIs
   const fetchWeatherByCity = async (cityName: string) => {
     setLoading(true);
     setError(null);
@@ -102,7 +104,6 @@ export default function UltimateWeatherDashboard() {
     }
   };
 
-  // 2. Lifecycle Effects for System Integration
   useEffect(() => {
     fetchWeatherByCity('Delhi');
 
@@ -125,20 +126,11 @@ export default function UltimateWeatherDashboard() {
     }
   }, []);
 
-  // 3. Helper Logic: Environmental Theme Dynamic Mapper
   const getWeatherTheme = (code: number): ThemeConfig => {
-    if (code === 0) {
-      return { text: 'Clear Sky', icon: '☀️', bgClass: 'from-amber-500 via-orange-600 to-amber-950' };
-    }
-    if (code >= 1 && code <= 3) {
-      return { text: 'Partly Cloudy', icon: '⛅', bgClass: 'from-blue-600 via-slate-700 to-slate-950' };
-    }
-    if (code >= 51 && code <= 67) {
-      return { text: 'Rainy Day', icon: '🌧️', bgClass: 'from-slate-700 via-indigo-950 to-zinc-950' };
-    }
-    if (code >= 95 && code <= 99) {
-      return { text: 'Thunderstorm', icon: '⛈️', bgClass: 'from-purple-900 via-zinc-900 to-black' };
-    }
+    if (code === 0) return { text: 'Clear Sky', icon: '☀️', bgClass: 'from-amber-500 via-orange-600 to-amber-950' };
+    if (code >= 1 && code <= 3) return { text: 'Partly Cloudy', icon: '⛅', bgClass: 'from-blue-600 via-slate-700 to-slate-950' };
+    if (code >= 51 && code <= 67) return { text: 'Rainy Day', icon: '🌧️', bgClass: 'from-slate-700 via-indigo-950 to-zinc-950' };
+    if (code >= 95 && code <= 99) return { text: 'Thunderstorm', icon: '⛈️', bgClass: 'from-purple-900 via-zinc-900 to-black' };
     return { text: 'Moderate Sky', icon: '🌍', bgClass: 'from-cyan-700 via-slate-800 to-slate-950' };
   };
 
@@ -148,14 +140,12 @@ export default function UltimateWeatherDashboard() {
     return { text: 'Unhealthy/Poor', color: 'text-red-400' };
   };
 
-  // Helper to extract language prefix (e.g., 'en-US' -> 'en')
   const getLangCode = () => {
     if (!selectedVoice) return 'en';
     const prefix = selectedVoice.lang.split('-')[0].split('_')[0].toLowerCase();
     return TRANSLATIONS[prefix] ? prefix : 'en';
   };
 
-  // 4. Feature Execution: Audio Synthesizer Engine with Confirmation Flow
   const handleVoiceSummary = () => {
     if (!weather) return;
 
@@ -173,58 +163,45 @@ export default function UltimateWeatherDashboard() {
     const theme = getWeatherTheme(weather.weathercode);
     const aqiStatus = getAQIDesc(weather.aqi).text;
     
-    // Phase 1: Speak current weather summary
     const briefString = strings.brief(
-      city, 
-      theme.text, 
-      weather.temperature, 
-      weather.humidity, 
-      weather.rainChance, 
-      weather.aqi, 
-      aqiStatus, 
-      weather.windspeed
+      city, theme.text, weather.temperature, weather.humidity, weather.rainChance, weather.aqi, aqiStatus, weather.windspeed
     );
 
-    const utterance = new SpeechSynthesisUtterance(briefString);
-    if (selectedVoice) utterance.voice = selectedVoice;
-    utterance.rate = 0.95;
-    utterance.pitch = 1.05;
+    const primaryUtterance = new SpeechSynthesisUtterance(briefString);
+    if (selectedVoice) primaryUtterance.voice = selectedVoice;
+    primaryUtterance.rate = rate;
+    primaryUtterance.pitch = pitch;
 
-    // Trigger confirmation flow when Phase 1 finishes
-    utterance.onend = () => {
-      // Small timeout keeps UI thread unblocked for custom execution state tracking
+    primaryUtterance.onend = () => {
       setTimeout(() => {
         const proceedWithHourly = window.confirm(strings.prompt);
         
-        let finalNarrationText = "";
+        let targetText = "";
         if (proceedWithHourly) {
-          // Construct 10 hours narration script
-          let hourlyText = `${strings.hourlyIntro} `;
+          targetText = `${strings.hourlyIntro} `;
           weather.hourlyTemp.slice(0, 10).forEach((temp, index) => {
             const timeString = new Date(weather.hourlyTime[index]).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit' 
+              hour: '2-digit', minute: '2-digit' 
             });
-            hourlyText += `${strings.hourlyItem(timeString, temp)} `;
+            targetText += `${strings.hourlyItem(timeString, temp)} `;
           });
-          finalNarrationText = hourlyText;
         } else {
-          finalNarrationText = strings.signOff;
+          targetText = strings.signOff;
         }
 
-        const secondaryUtterance = new SpeechSynthesisUtterance(finalNarrationText);
+        const secondaryUtterance = new SpeechSynthesisUtterance(targetText);
         if (selectedVoice) secondaryUtterance.voice = selectedVoice;
-        secondaryUtterance.rate = 0.95;
-        secondaryUtterance.pitch = 1.05;
+        secondaryUtterance.rate = rate;
+        secondaryUtterance.pitch = pitch;
         
         secondaryUtterance.onend = () => setIsSpeaking(false);
         secondaryUtterance.onerror = () => setIsSpeaking(false);
         window.speechSynthesis.speak(secondaryUtterance);
-      }, 200);
+      }, 150);
     };
 
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+    primaryUtterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(primaryUtterance);
   };
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -244,27 +221,7 @@ export default function UltimateWeatherDashboard() {
           <span className="text-2xl">{currentTheme.icon}</span> SKYVIBE.IO
         </h1>
         
-        {/* Dynamic Controls Grid */}
-        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
-          {/* Voice Engine Dropdown Selection */}
-          {voices.length > 0 && (
-            <select
-              value={selectedVoice?.name || ''}
-              onChange={(e) => {
-                const found = voices.find((v) => v.name === e.target.value);
-                if (found) setSelectedVoice(found);
-              }}
-              className="w-full sm:w-64 bg-black/30 border border-white/10 rounded-xl px-2 py-2 text-xs text-white/80 focus:outline-none"
-            >
-              {voices.map((v, i) => (
-                <option key={i} value={v.name} className="bg-slate-900 text-white text-xs">
-                  {v.name} ({v.lang})
-                </option>
-              ))}
-            </select>
-          )}
-
-          {/* Core Input Form */}
+        <div className="flex w-full md:w-auto items-center justify-between md:justify-end gap-4">
           <form onSubmit={handleSearchSubmit} className="flex w-full sm:w-auto gap-2">
             <input
               type="text"
@@ -277,10 +234,31 @@ export default function UltimateWeatherDashboard() {
               Search
             </button>
           </form>
+
+          {/* Interactive Mechanical Gear Icon Toggle */}
+          <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-2.5 bg-white/10 border border-white/10 hover:border-white/30 rounded-xl hover:scale-105 active:scale-95 transition-all text-xl"
+            title="Configure System Voice Settings"
+          >
+            ⚙️
+          </button>
         </div>
       </header>
 
-      {/* Loading Vector Representation */}
+      {/* Dynamic Pop-up Overlay Injector */}
+      <Settings 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        voices={voices}
+        selectedVoice={selectedVoice}
+        setSelectedVoice={setSelectedVoice}
+        rate={rate}
+        setRate={setRate}
+        pitch={pitch}
+        setPitch={setPitch}
+      />
+
       {loading && (
         <div className="my-auto flex flex-col items-center gap-2 tracking-widest text-sm font-bold text-white/70">
           <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -288,18 +266,14 @@ export default function UltimateWeatherDashboard() {
         </div>
       )}
 
-      {/* Runtime Exception UI View */}
       {error && (
         <div className="my-auto bg-red-500/20 border border-red-500/40 p-4 rounded-2xl font-bold text-red-200 shadow-xl max-w-md text-center">
           ⚠️ Core Exception: {error}
         </div>
       )}
 
-      {/* Dashboard Grid System Presentation */}
       {weather && !loading && !error && (
         <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-fadeIn">
-          
-          {/* Main Core Display Block */}
           <div className="lg:col-span-1 space-y-6">
             <section className="bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex flex-col justify-between min-h-[220px] shadow-2xl">
               <div className="flex justify-between items-start">
@@ -325,7 +299,6 @@ export default function UltimateWeatherDashboard() {
               </button>
             </section>
 
-            {/* Matrix Data Cards */}
             <section className="bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-5 grid grid-cols-2 gap-4 shadow-2xl">
               <div className="bg-white/5 border border-white/5 p-4 rounded-2xl shadow-sm">
                 <span className="text-[10px] font-black text-white/40 block tracking-widest mb-1 uppercase">Atmosphere AQI</span>
@@ -350,7 +323,6 @@ export default function UltimateWeatherDashboard() {
             </section>
           </div>
 
-          {/* Sequential 10 Hour Card Timeline */}
           <section className="lg:col-span-2 bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl h-full">
             <h3 className="text-xs font-black tracking-widest uppercase text-white/60 mb-6 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-blue-400 shadow-md animate-ping"></span> CHRONOLOGICAL HOURLY LOOKAHEAD (10H)
@@ -359,8 +331,7 @@ export default function UltimateWeatherDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {weather.hourlyTemp.slice(0, 10).map((temp, index) => {
                 const timeString = new Date(weather.hourlyTime[index]).toLocaleTimeString([], { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
+                  hour: '2-digit', minute: '2-digit' 
                 });
                 return (
                   <div 
@@ -379,7 +350,6 @@ export default function UltimateWeatherDashboard() {
               })}
             </div>
           </section>
-
         </main>
       )}
     </div>
