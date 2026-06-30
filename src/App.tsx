@@ -18,6 +18,34 @@ interface ThemeConfig {
   bgClass: string;
 }
 
+// Localization Dictionary Matrix
+const TRANSLATIONS: Record<string, any> = {
+  en: {
+    brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
+      `Live atmosphere telemetry report for ${city}. The primary indicator shows ${condition} at ${temp} degrees Celsius. Humidity is distributed at ${hum} percent, while precipitation metrics predict a ${rain} percent probability of active rainfall. Air quality register reads ${aqi}, indicating a ${status} status. Current vector wind speed clocks at ${wind} kilometers per hour.`,
+    prompt: "Would you like a narration of the 10-hour hourly forecast?",
+    signOff: "Have a great day, signing off.",
+    hourlyIntro: "Here is your chronological 10-hour lookahead.",
+    hourlyItem: (time: string, temp: number) => `At ${time}, it will be ${temp} degrees Celsius.`
+  },
+  hi: {
+    brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
+      `${city} के लिए लाइव मौसम रिपोर्ट। मुख्य संकेतक ${temp} डिग्री सेल्सियस पर ${condition} दिखाता है। उमस ${hum} प्रतिशत है, जबकि बारिश की संभावना ${rain} प्रतिशत है। वायु गुणवत्ता सूचकांक ${aqi} है। हवा की गति ${wind} किलोमीटर प्रति घंटा है।`,
+    prompt: "क्या आप अगले 10 घंटे का मौसम पूर्वानुमान सुनना चाहते हैं?",
+    signOff: "आपका दिन शुभ हो, अलविदा।",
+    hourlyIntro: "अगले 10 घंटों का विवरण इस प्रकार है।",
+    hourlyItem: (time: string, temp: number) => `${time} बजे, तापमान ${temp} डिग्री सेल्सियस होगा।`
+  },
+  es: {
+    brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
+      `Informe del clima para ${city}. El indicador principal muestra ${condition} a ${temp} grados Celsius. La humedad es del ${hum} por ciento y la probabilidad de lluvia es del ${rain} por ciento. El índice de calidad del aire es de ${aqi}. La velocidad del viento es de ${wind} kilómetros por hora.`,
+    prompt: "¿Le gustaría escuchar la narración del pronóstico de 10 horas?",
+    signOff: "Que tenga un excelente día, terminando transmisión.",
+    hourlyIntro: "Aquí está el pronóstico cronológico de 10 horas.",
+    hourlyItem: (time: string, temp: number) => `A las ${time}, estará a ${temp} grados Celsius.`
+  }
+};
+
 export default function UltimateWeatherDashboard() {
   // Application State Management
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -33,7 +61,6 @@ export default function UltimateWeatherDashboard() {
     setLoading(true);
     setError(null);
     try {
-      // Step A: Convert City Name into Geographic Latitude/Longitude Coordinate Vector
       const geoRes = await fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=1&language=en&format=json`
       );
@@ -46,20 +73,17 @@ export default function UltimateWeatherDashboard() {
       const { latitude, longitude, name } = geoData.results[0];
       setCity(name);
 
-      // Step B: Query Core Atmosphere Metrics and Hourly Arrays
       const weatherRes = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relative_humidity_2m,precipitation_probability`
       );
       if (!weatherRes.ok) throw new Error('Weather metrics load nahi ho paye.');
       const data = await weatherRes.json();
 
-      // Step C: Query Environmental Air Quality Index Vector
       const aqiRes = await fetch(
         `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=us_aqi`
       );
       const aqiData = await aqiRes.json();
 
-      // Package everything statefully inside structured contract
       setWeather({
         temperature: data.current_weather.temperature,
         windspeed: data.current_weather.windspeed,
@@ -80,16 +104,13 @@ export default function UltimateWeatherDashboard() {
 
   // 2. Lifecycle Effects for System Integration
   useEffect(() => {
-    // Initial fetch trigger
     fetchWeatherByCity('Delhi');
 
-    // System Synthesis Voice Loader
     const loadSystemVoices = () => {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         const availableVoices = window.speechSynthesis.getVoices();
         setVoices(availableVoices);
 
-        // Preference order: Target clear Indian English accent, fallback to standard native speech
         const preferredVoice = availableVoices.find(
           (v) => v.lang === 'en-IN' || v.lang.includes('en_IN')
         ) || availableVoices.find((v) => v.lang.includes('en')) || availableVoices[0];
@@ -127,7 +148,14 @@ export default function UltimateWeatherDashboard() {
     return { text: 'Unhealthy/Poor', color: 'text-red-400' };
   };
 
-  // 4. Feature Execution: Audio Synthesizer Engine
+  // Helper to extract language prefix (e.g., 'en-US' -> 'en')
+  const getLangCode = () => {
+    if (!selectedVoice) return 'en';
+    const prefix = selectedVoice.lang.split('-')[0].split('_')[0].toLowerCase();
+    return TRANSLATIONS[prefix] ? prefix : 'en';
+  };
+
+  // 4. Feature Execution: Audio Synthesizer Engine with Confirmation Flow
   const handleVoiceSummary = () => {
     if (!weather) return;
 
@@ -138,21 +166,63 @@ export default function UltimateWeatherDashboard() {
     }
 
     setIsSpeaking(true);
+    window.speechSynthesis.cancel();
+
+    const langKey = getLangCode();
+    const strings = TRANSLATIONS[langKey];
     const theme = getWeatherTheme(weather.weathercode);
     const aqiStatus = getAQIDesc(weather.aqi).text;
     
-    const briefString = `Live atmosphere telemetry report for ${city}. The primary indicator shows ${theme.text} at ${weather.temperature} degrees Celsius. Humidity is distributed at ${weather.humidity} percent, while precipitation metrics predict a ${weather.rainChance} percent probability of active rainfall. Air quality register reads ${weather.aqi}, indicating a ${aqiStatus} status. Current vector wind speed clocks at ${weather.windspeed} kilometers per hour.`;
+    // Phase 1: Speak current weather summary
+    const briefString = strings.brief(
+      city, 
+      theme.text, 
+      weather.temperature, 
+      weather.humidity, 
+      weather.rainChance, 
+      weather.aqi, 
+      aqiStatus, 
+      weather.windspeed
+    );
 
-    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(briefString);
-    
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
-    utterance.rate = 0.95; // Slightly calculated smooth pacing
-    utterance.pitch = 1.05; // Clean distinct tonal layer
+    if (selectedVoice) utterance.voice = selectedVoice;
+    utterance.rate = 0.95;
+    utterance.pitch = 1.05;
 
-    utterance.onend = () => setIsSpeaking(false);
+    // Trigger confirmation flow when Phase 1 finishes
+    utterance.onend = () => {
+      // Small timeout keeps UI thread unblocked for custom execution state tracking
+      setTimeout(() => {
+        const proceedWithHourly = window.confirm(strings.prompt);
+        
+        let finalNarrationText = "";
+        if (proceedWithHourly) {
+          // Construct 10 hours narration script
+          let hourlyText = `${strings.hourlyIntro} `;
+          weather.hourlyTemp.slice(0, 10).forEach((temp, index) => {
+            const timeString = new Date(weather.hourlyTime[index]).toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+            hourlyText += `${strings.hourlyItem(timeString, temp)} `;
+          });
+          finalNarrationText = hourlyText;
+        } else {
+          finalNarrationText = strings.signOff;
+        }
+
+        const secondaryUtterance = new SpeechSynthesisUtterance(finalNarrationText);
+        if (selectedVoice) secondaryUtterance.voice = selectedVoice;
+        secondaryUtterance.rate = 0.95;
+        secondaryUtterance.pitch = 1.05;
+        
+        secondaryUtterance.onend = () => setIsSpeaking(false);
+        secondaryUtterance.onerror = () => setIsSpeaking(false);
+        window.speechSynthesis.speak(secondaryUtterance);
+      }, 200);
+    };
+
     utterance.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);
   };
@@ -162,7 +232,6 @@ export default function UltimateWeatherDashboard() {
     if (city.trim()) fetchWeatherByCity(city);
   };
 
-  // Resolve current rendering themes safely
   const currentTheme = weather ? getWeatherTheme(weather.weathercode) : { text: 'Syncing', icon: '🌍', bgClass: 'from-slate-950 to-black' };
   const aqiDetails = weather ? getAQIDesc(weather.aqi) : { text: '', color: '' };
 
@@ -185,7 +254,7 @@ export default function UltimateWeatherDashboard() {
                 const found = voices.find((v) => v.name === e.target.value);
                 if (found) setSelectedVoice(found);
               }}
-              className="w-full sm:w-48 bg-black/30 border border-white/10 rounded-xl px-2 py-2 text-xs text-white/80 focus:outline-none"
+              className="w-full sm:w-64 bg-black/30 border border-white/10 rounded-xl px-2 py-2 text-xs text-white/80 focus:outline-none"
             >
               {voices.map((v, i) => (
                 <option key={i} value={v.name} className="bg-slate-900 text-white text-xs">
@@ -281,7 +350,7 @@ export default function UltimateWeatherDashboard() {
             </section>
           </div>
 
-          {/* Sequential 10 Hour Card Timeline (No Horizontal Scroller UX) */}
+          {/* Sequential 10 Hour Card Timeline */}
           <section className="lg:col-span-2 bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl h-full">
             <h3 className="text-xs font-black tracking-widest uppercase text-white/60 mb-6 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-blue-400 shadow-md animate-ping"></span> CHRONOLOGICAL HOURLY LOOKAHEAD (10H)
