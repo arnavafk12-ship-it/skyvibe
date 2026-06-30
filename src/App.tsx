@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import  { useState, useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import { gsap } from 'gsap';
 
 // Mock sub-module placeholders for demonstration; bind to your core code sheets
@@ -11,7 +11,6 @@ const NewsApp = () => <div className="p-8 text-center font-mono text-xs text-cya
 // ==========================================
 function GlobalNavigationBar({ onVoiceCommand }: { onVoiceCommand: (text: string) => void }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
