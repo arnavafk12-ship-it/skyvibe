@@ -1,14 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 
 // ==========================================
-// 1. PLACEHOLDER / ENGINE MODULE SLOTS
+// 1. MODULE SLOTS (WEATHER & NEWS COMPONENTS)
 // ==========================================
-// Swap these with your actual local component imports:
-// import WeatherApp from './Weather';
-// import NewsApp from './News';
-
 interface SubAppProps {
   voiceCity?: string;
   voiceTopic?: string;
@@ -98,9 +94,8 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
     <nav className="w-full bg-slate-950/85 backdrop-blur-2xl border-b border-white/10 sticky top-0 z-50 px-6 py-4 shadow-2xl">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         
-        {/* System Branding Vector */}
         <Link to="/" onClick={() => setIsOpen(false)} className="flex items-center gap-3 group">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center font-black text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-all">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center font-black text-white shadow-lg group-hover:scale-105 transition-all">
             Ω
           </div>
           <div>
@@ -109,7 +104,6 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
           </div>
         </Link>
 
-        {/* Desktop Interface Nodes */}
         <div className="hidden md:flex items-center gap-6">
           <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/5">
             <Link to="/" className={`px-4 py-2 text-xs font-black tracking-wider uppercase rounded-lg transition-all ${isActive('/') ? 'bg-white text-slate-950' : 'text-white/60 hover:text-white'}`}>
@@ -133,7 +127,6 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
           </button>
         </div>
 
-        {/* Mobile Functional Actions */}
         <div className="flex items-center gap-3 md:hidden">
           <button 
             onClick={toggleVoiceMatrix}
@@ -142,10 +135,7 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
             🎤
           </button>
           
-          <button 
-            onClick={() => setIsOpen(!isOpen)} 
-            className="flex flex-col justify-center items-center w-8 h-8 space-y-1.5 focus:outline-none z-50 relative"
-          >
+          <button onClick={() => setIsOpen(!isOpen)} className="flex flex-col justify-center items-center w-8 h-8 space-y-1.5 focus:outline-none z-50 relative">
             <span className={`h-0.5 w-6 bg-white rounded transition-transform duration-300 ${isOpen ? 'transform rotate-45 translate-y-2' : ''}`} />
             <span className={`h-0.5 w-6 bg-white rounded transition-opacity duration-300 ${isOpen ? 'opacity-0' : 'opacity-100'}`} />
             <span className={`h-0.5 w-6 bg-white rounded transition-transform duration-300 ${isOpen ? 'transform -rotate-45 -translate-y-2' : ''}`} />
@@ -154,7 +144,6 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
 
       </div>
 
-      {/* Mobile Drawer Mapping */}
       {isOpen && (
         <div className="absolute top-full left-0 w-full bg-slate-950 border-b border-white/10 flex flex-col p-6 space-y-4 md:hidden shadow-2xl z-40">
           <Link to="/" onClick={() => setIsOpen(false)} className={`p-3 rounded-xl text-sm font-bold tracking-wider text-center ${isActive('/') ? 'bg-white text-slate-950' : 'bg-white/5 text-white'}`}>
@@ -173,7 +162,7 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
 }
 
 // ==========================================
-// 3. ELEGANT CENTRAL HUB (GSAP POWERED)
+// 3. CENTRAL HUB (GSAP POWERED)
 // ==========================================
 function DashboardHub() {
   useEffect(() => {
@@ -189,7 +178,6 @@ function DashboardHub() {
     <div className="min-h-screen w-full bg-gradient-to-b from-slate-950 via-slate-900 to-black text-white flex flex-col items-center justify-start p-6 md:p-16 antialiased overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
       <div className="max-w-5xl w-full space-y-16">
         
-        {/* Main Header Presentation Section */}
         <div className="text-center space-y-4">
           <span className="gsap-hero text-xs font-black tracking-[0.3em] text-indigo-400 uppercase bg-indigo-500/10 border border-indigo-500/20 px-4 py-1.5 rounded-full inline-block">
             System Control Console
@@ -202,7 +190,6 @@ function DashboardHub() {
           </p>
         </div>
 
-        {/* Node Selection Anchors Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Link to="/weather" className="gsap-card group bg-gradient-to-br from-slate-900 to-slate-950 border border-white/10 p-8 rounded-3xl hover:border-amber-500/40 transition-all duration-300 shadow-2xl flex flex-col justify-between min-h-[200px] hover:-translate-y-1">
             <div className="flex justify-between items-start">
@@ -231,7 +218,6 @@ function DashboardHub() {
           </Link>
         </div>
 
-        {/* Feature Descriptions Section */}
         <div className="border-t border-white/10 pt-12 space-y-6">
           <h2 className="gsap-feature text-xs font-black tracking-[0.2em] text-white/40 uppercase">ARCHITECTURE SYSTEM PROTOCOLS</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -262,9 +248,10 @@ function DashboardHub() {
 }
 
 // ==========================================
-// 4. MAIN ENTRY AND SPEECH NATURAL ENGINE
+// 4. MAIN LAYOUT AND SPEECH MANAGER
 // ==========================================
-export default function ApplicationEntrypoint() {
+function MainLayoutWrapper() {
+  const navigate = useNavigate();
   const [voiceLog, setVoiceLog] = useState<string>("");
   const [cityPayload, setCityPayload] = useState<string>("");
   const [topicPayload, setTopicPayload] = useState<string>("");
@@ -273,7 +260,6 @@ export default function ApplicationEntrypoint() {
     const cleanedText = rawText.toLowerCase().trim();
     setVoiceLog(rawText);
 
-    // Context Detection Matrix
     if (cleanedText.includes('weather') || cleanedText.includes('climate') || cleanedText.includes('temperature')) {
       let extractedCity = "";
       if (cleanedText.includes(' in ')) extractedCity = cleanedText.split(' in ')[1];
@@ -287,7 +273,7 @@ export default function ApplicationEntrypoint() {
         const capitalizedCity = extractedCity.charAt(0).toUpperCase() + extractedCity.slice(1);
         setCityPayload(capitalizedCity);
       }
-      window.location.pathname = '/weather';
+      navigate('/weather');
     } 
     
     else if (cleanedText.includes('news') || cleanedText.includes('feed') || cleanedText.includes('headlines') || cleanedText.includes('articles')) {
@@ -301,48 +287,49 @@ export default function ApplicationEntrypoint() {
       } else {
         setTopicPayload("Top Headlines");
       }
-      window.location.pathname = '/news';
+      navigate('/news');
     } 
     
     else if (cleanedText.includes('home') || cleanedText.includes('hub') || cleanedText.includes('back')) {
-      window.location.pathname = '/';
+      navigate('/');
     }
   };
 
   return (
+    <div className="min-h-screen bg-slate-950 flex flex-col font-sans select-none overflow-x-hidden text-white">
+      <GlobalNavigationBar onVoiceCommand={handleSmartVoiceParsing} />
+
+      {voiceLog && (
+        <div className="w-full bg-indigo-600/20 border-b border-indigo-500/30 px-6 py-2 text-center text-[10px] font-mono tracking-wider text-indigo-300 flex items-center justify-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping" />
+          INTENT RECORDED // REGISTERED TRANSCRIPT: "{voiceLog.toUpperCase()}"
+        </div>
+      )}
+
+      <Routes>
+        <Route path="/" element={<DashboardHub />} />
+        <Route path="/weather" element={<WeatherApp voiceCity={cityPayload} />} />
+        <Route path="/news" element={<NewsApp voiceTopic={topicPayload} />} />
+        <Route 
+          path="*" 
+          element={
+            <div className="flex-1 flex flex-col items-center justify-center text-white bg-slate-950">
+              <h2 className="text-sm font-black tracking-widest uppercase">404 // Boundary Lost</h2>
+              <Link to="/" className="mt-4 text-[10px] bg-white text-slate-950 px-4 py-2 rounded-xl font-bold tracking-widest">
+                RETURN RESET
+              </Link>
+            </div>
+          } 
+        />
+      </Routes>
+    </div>
+  );
+}
+
+export default function ApplicationEntrypoint() {
+  return (
     <BrowserRouter>
-      <div className="min-h-screen bg-slate-950 flex flex-col font-sans select-none overflow-x-hidden selection:bg-white selection:text-black">
-        
-        {/* Global Layout Navigation */}
-        <GlobalNavigationBar onVoiceCommand={handleSmartVoiceParsing} />
-
-        {/* Live Audio Ingestion Telemetry Banner */}
-        {voiceLog && (
-          <div className="w-full bg-indigo-600/20 border-b border-indigo-500/30 px-6 py-2 text-center text-[10px] font-mono tracking-wider text-indigo-300 flex items-center justify-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping" />
-            INTENT RECORDED // REGISTERED TRANSCRIPT: "{voiceLog.toUpperCase()}"
-          </div>
-        )}
-
-        {/* System Component Routes */}
-        <Routes>
-          <Route path="/" element={<DashboardHub />} />
-          <Route path="/weather" element={<WeatherApp voiceCity={cityPayload} />} />
-          <Route path="/news" element={<NewsApp voiceTopic={topicPayload} />} />
-          <Route 
-            path="*" 
-            element={
-              <div className="flex-1 flex flex-col items-center justify-center text-white bg-slate-950">
-                <h2 className="text-sm font-black tracking-widest uppercase">404 // Boundary Lost</h2>
-                <Link to="/" className="mt-4 text-[10px] bg-white text-slate-950 px-4 py-2 rounded-xl font-bold tracking-widest">
-                  RETURN RESET
-                </Link>
-              </div>
-            } 
-          />
-        </Routes>
-
-      </div>
+      <MainLayoutWrapper />
     </BrowserRouter>
   );
 }
