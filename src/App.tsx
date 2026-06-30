@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 
 // ==========================================
-// 1. MODULE SLOTS (CLEANED SUB-COMPONENTS)
+// 1. MODULE SLOTS (STYLISH VIEWPORTS)
 // ==========================================
 interface SubAppProps {
   voiceCity?: string;
@@ -19,10 +19,11 @@ function WeatherApp({ voiceCity }: SubAppProps) {
   }, [voiceCity]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center max-w-2xl mx-auto min-h-[60vh]">
-      <h2 className="text-3xl font-light tracking-tight text-white">SkyVibe Climate Engine</h2>
-      <p className="text-sm text-slate-400 mt-3 max-w-md font-sans">
-        Currently displaying automated atmospheric data mappings for local vector layer: <span className="text-amber-400 font-medium">{voiceCity ? voiceCity : 'Global Default'}</span>.
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-2xl mx-auto min-h-[50vh]">
+      <span className="text-5xl mb-4 animate-pulse">☀️</span>
+      <h2 className="text-2xl font-bold tracking-tight text-white">Climate Workspace Grid</h2>
+      <p className="text-sm text-slate-400 mt-2 font-mono">
+        Active Target Vector: <span className="text-amber-400 font-semibold">{voiceCity ? voiceCity.toUpperCase() : 'GLOBAL_CORE'}</span>
       </p>
     </div>
   );
@@ -37,17 +38,18 @@ function NewsApp({ voiceTopic }: SubAppProps) {
   }, [voiceTopic]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center max-w-2xl mx-auto min-h-[60vh]">
-      <h2 className="text-3xl font-light tracking-tight text-white">VibeNews Intelligence Wire</h2>
-      <p className="text-sm text-slate-400 mt-3 max-w-md font-sans">
-        Streaming global editorial index parameters configured to filter: <span className="text-cyan-400 font-medium">{voiceTopic ? voiceTopic : 'Top Headlines'}</span>.
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-2xl mx-auto min-h-[50vh]">
+      <span className="text-5xl mb-4">📰</span>
+      <h2 className="text-2xl font-bold tracking-tight text-white">Intelligence News Stream</h2>
+      <p className="text-sm text-slate-400 mt-2 font-mono">
+        Active Index Query: <span className="text-cyan-400 font-semibold">{voiceTopic ? voiceTopic.toUpperCase() : 'TOP_HEADLINES'}</span>
       </p>
     </div>
   );
 }
 
 // ==========================================
-// 2. MINIMAL LUXURY NAVBAR ARCHITECTURE
+// 2. RESPONSIVE NAVIGATION WITH ICONS
 // ==========================================
 interface NavigationProps {
   onVoiceCommand: (text: string) => void;
@@ -81,7 +83,7 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
 
   const toggleVoiceMatrix = () => {
     if (!recognitionRef.current) {
-      alert("Acoustic modules are unsupported by this browser architecture.");
+      alert("Voice modules are unsupported by this browser.");
       return;
     }
     if (isListening) recognitionRef.current.stop();
@@ -89,64 +91,75 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
   };
 
   return (
-    <nav className="w-full bg-slate-950/40 backdrop-blur-md border-b border-white/[0.06] sticky top-0 z-50 px-8 py-5 transition-all">
+    <nav className="w-full bg-slate-950/80 backdrop-blur-xl border-b border-white/[0.08] sticky top-0 z-50 px-6 py-4 shadow-xl">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         
-        {/* Sleek Corporate Branding */}
-        <Link to="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2 group">
-          <span className="text-white font-semibold tracking-[0.2em] text-sm">NEXUS</span>
-          <span className="text-[10px] text-slate-500 font-mono tracking-wider pt-0.5">OS v2</span>
+        {/* Brand Terminal */}
+        <Link to="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-sm">
+            Ω
+          </div>
+          <span className="text-white font-bold tracking-wider text-sm">NEXUS.OS</span>
         </Link>
 
-        {/* Minimal Text Links (No buttons here) */}
-        <div className="hidden md:flex items-center gap-8">
-          <div className="flex gap-8 text-xs font-medium tracking-wider uppercase">
-            <Link to="/" className={`transition-colors duration-200 ${isActive('/') ? 'text-white font-semibold' : 'text-slate-400 hover:text-white'}`}>
-              Overview
+        {/* Desktop Links with Structural Icons */}
+        <div className="hidden md:flex items-center gap-6">
+          <div className="flex gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.05]">
+            <Link to="/" className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-2 ${isActive('/') ? 'bg-white text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}>
+              <span>🏠</span> Hub
             </Link>
-            <Link to="/weather" className={`transition-colors duration-200 ${isActive('/weather') ? 'text-amber-400 font-semibold' : 'text-slate-400 hover:text-white'}`}>
-              Climate
+            <Link to="/weather" className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-2 ${isActive('/weather') ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}>
+              <span>☀️</span> Climate
             </Link>
-            <Link to="/news" className={`transition-colors duration-200 ${isActive('/news') ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-white'}`}>
-              Intelligence
+            <Link to="/news" className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-2 ${isActive('/news') ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}>
+              <span>📰</span> News
             </Link>
           </div>
 
-          <span className="h-4 w-[1px] bg-white/10" />
-
-          {/* Premium Clean Action Toggle */}
+          {/* Prompt Action Node */}
           <button 
             onClick={toggleVoiceMatrix}
-            className={`text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-2 ${
-              isListening ? 'text-red-400' : 'text-white hover:opacity-80'
+            className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-all border flex items-center gap-2 ${
+              isListening ? 'bg-red-500 border-red-400 animate-pulse text-white' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${isListening ? 'bg-red-500 animate-pulse' : 'bg-emerald-400'}`} />
-            {isListening ? 'Listening' : 'Voice System'}
+            <span>🎙️</span> {isListening ? 'Listening...' : 'Voice Control'}
           </button>
         </div>
 
-        {/* Clean Menu Burger Trigger */}
-        <div className="flex items-center gap-4 md:hidden">
-          <button onClick={toggleVoiceMatrix} className={`text-xs uppercase font-bold tracking-widest ${isListening ? 'text-red-400 animate-pulse' : 'text-slate-400'}`}>
-            [Voice]
+        {/* Mobile Smooth Action Block */}
+        <div className="flex items-center gap-2.5 md:hidden">
+          <button 
+            onClick={toggleVoiceMatrix}
+            className={`p-2.5 rounded-xl border text-sm transition-all active:scale-95 ${isListening ? 'bg-red-500 text-white border-red-400' : 'bg-white/5 text-slate-300 border-white/10'}`}
+          >
+            🎙️
           </button>
           
-          <button onClick={() => setIsOpen(!isOpen)} className="flex flex-col justify-center items-center w-6 h-5 space-y-1 z-50 focus:outline-none">
-            <span className={`h-[1px] w-5 bg-white transition-all duration-300 ${isOpen ? 'rotate-45 translate-y-[5px]' : ''}`} />
-            <span className={`h-[1px] w-5 bg-white transition-all duration-300 ${isOpen ? 'opacity-0' : 'opacity-100'}`} />
-            <span className={`h-[1px] w-5 bg-white transition-all duration-300 ${isOpen ? '-rotate-45 translate-y-[-5px]' : ''}`} />
+          <button 
+            onClick={() => setIsOpen(!isOpen)} 
+            className="flex flex-col justify-center items-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 space-y-1 z-50 active:scale-95 transition-transform"
+          >
+            <span className={`h-0.5 w-5 bg-white transition-all duration-200 ${isOpen ? 'rotate-45 translate-y-[4px]' : ''}`} />
+            <span className={`h-0.5 w-5 bg-white transition-all duration-200 ${isOpen ? 'opacity-0' : 'opacity-100'}`} />
+            <span className={`h-0.5 w-5 bg-white transition-all duration-200 ${isOpen ? '-rotate-45 translate-y-[-4px]' : ''}`} />
           </button>
         </div>
 
       </div>
 
-      {/* Mobile Pop Down */}
+      {/* Hardware Accelerated Mobile Menu Layer */}
       {isOpen && (
-        <div className="absolute top-full left-0 w-full bg-slate-950/95 border-b border-white/[0.06] flex flex-col p-8 space-y-5 md:hidden text-left shadow-2xl backdrop-blur-lg">
-          <Link to="/" onClick={() => setIsOpen(false)} className="text-xs uppercase font-medium tracking-widest text-slate-300 hover:text-white">Central Overview</Link>
-          <Link to="/weather" onClick={() => setIsOpen(false)} className="text-xs uppercase font-medium tracking-widest text-slate-300 hover:text-white">Climate Platform</Link>
-          <Link to="/news" onClick={() => setIsOpen(false)} className="text-xs uppercase font-medium tracking-widest text-slate-300 hover:text-white">News Intelligence</Link>
+        <div className="absolute top-full left-0 w-full bg-slate-950/95 backdrop-blur-2xl border-b border-white/[0.08] flex flex-col p-5 space-y-3 md:hidden shadow-2xl transition-all">
+          <Link to="/" onClick={() => setIsOpen(false)} className={`p-3 rounded-xl text-xs font-bold tracking-wider uppercase flex items-center gap-3 ${isActive('/') ? 'bg-white text-slate-950' : 'bg-white/5 text-white'}`}>
+            <span>🏠</span> Dashboard Hub
+          </Link>
+          <Link to="/weather" onClick={() => setIsOpen(false)} className={`p-3 rounded-xl text-xs font-bold tracking-wider uppercase flex items-center gap-3 ${isActive('/weather') ? 'bg-amber-500 text-slate-950' : 'bg-white/5 text-white'}`}>
+            <span>☀️</span> SkyVibe Climate
+          </Link>
+          <Link to="/news" onClick={() => setIsOpen(false)} className={`p-3 rounded-xl text-xs font-bold tracking-wider uppercase flex items-center gap-3 ${isActive('/news') ? 'bg-cyan-500 text-slate-950' : 'bg-white/5 text-white'}`}>
+            <span>📰</span> Intelligence Wire
+          </Link>
         </div>
       )}
     </nav>
@@ -154,74 +167,72 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
 }
 
 // ==========================================
-// 3. ELEGANT SAASED PORTAL HUB (GSAP OPTIMIZED)
+// 3. FEATURE PORTAL HUB (GSAP POWERED)
 // ==========================================
 function DashboardHub() {
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.from(".gsap-hero", { y: 25, opacity: 0, duration: 1.2, stagger: 0.15, ease: "power4.out" });
-      gsap.from(".gsap-section", { y: 30, opacity: 0, duration: 1, delay: 0.4, ease: "power3.out" });
+      gsap.from(".gsap-hero", { y: 25, opacity: 0, duration: 1, stagger: 0.1, ease: "power3.out" });
+      gsap.from(".gsap-card", { y: 35, opacity: 0, duration: 0.8, stagger: 0.15, ease: "power2.out", delay: 0.3 });
     });
     return () => ctx.revert();
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-white flex flex-col items-center justify-start px-6 md:px-16 py-20 md:py-32 antialiased overflow-y-auto relative [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-      
-      {/* Editorial Tech Ambient Atmosphere Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-gradient-to-b from-indigo-500/[0.03] via-transparent to-transparent pointer-events-none blur-[120px]" />
-
-      <div className="max-w-4xl w-full space-y-28 relative z-10">
+    <div className="min-h-screen w-full bg-slate-950 text-white flex flex-col items-center justify-start px-6 md:px-16 py-16 md:py-24 antialiased overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+      <div className="max-w-5xl w-full space-y-20">
         
-        {/* Editorial Clean Hero Text */}
-        <div className="space-y-6 text-left max-w-3xl">
-          <p className="gsap-hero text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase font-mono">
-            Platform Overview
-          </p>
-          <h1 className="gsap-hero text-4xl md:text-6xl font-normal tracking-tight text-white leading-[1.1]">
-            A programmatic application layer for contextual streaming data.
+        {/* Dynamic Typography Hero Segment */}
+        <div className="space-y-4 max-w-3xl">
+          <span className="gsap-hero text-xs font-bold tracking-[0.3em] text-indigo-400 uppercase font-mono bg-indigo-500/10 px-3 py-1 rounded-md inline-block">
+            Enterprise Workspace
+          </span>
+          <h1 className="gsap-hero text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
+            An ecosystem configured to handle real-time streaming intent.
           </h1>
-          <p className="gsap-hero text-base text-slate-400 max-w-2xl leading-relaxed font-sans font-light">
-            Nexus coordinates ambient network inputs to render structural visualization feeds. Tap your mic interface or command the environment using high-level voice instructions.
+          <p className="gsap-hero text-sm md:text-base text-slate-400 leading-relaxed font-light">
+            Nexus integrates responsive web components with browser voice interaction trees. Activate the voice integrator parameter or explore our custom sub-systems directly via the feature terminals listed below.
           </p>
-          <div className="gsap-hero pt-4 flex gap-6 text-xs font-semibold tracking-wider uppercase">
-            <Link to="/weather" className="text-white hover:underline underline-offset-4">Explore Climate Engine &rarr;</Link>
-            <Link to="/news" className="text-slate-400 hover:text-white transition-colors">View Wire Feeds</Link>
-          </div>
         </div>
 
-        {/* Clean Modular Info Panel (No button grid borders) */}
-        <div className="gsap-section grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12 pt-12 border-t border-white/[0.08]">
+        {/* Feature Cards Matrix Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
           
-          <div className="space-y-3">
-            <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">01 // CLIMATE MONITOR</span>
-            <h3 className="text-lg font-medium text-white">Atmospheric Telemetry Grid</h3>
-            <p className="text-sm text-slate-400 font-light leading-relaxed">
-              Maintains processing lines parsing relative humidity metrics and localization parameters. Fully configured to synthesize and read loaded geographic data back safely via user-controlled strings.
+          <div className="gsap-card bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.08] p-8 rounded-3xl flex flex-col justify-between space-y-6 hover:border-white/20 transition-all duration-300 shadow-xl relative overflow-hidden group">
+            <div className="space-y-4">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl">☀️</div>
+              <h3 className="text-xl font-bold tracking-tight text-white group-hover:text-amber-400 transition-colors">Atmospheric Telemetry Network</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-light">
+                Processes complex localized weather streams and structural matrix variables. Say commands like <span className="text-amber-400 font-medium font-mono">"Weather in Chicago"</span> to auto-navigate and trigger immediate structural audio translations.
+              </p>
+            </div>
+            <Link to="/weather" className="text-xs font-bold tracking-wider uppercase text-white hover:underline underline-offset-4 pt-4 block">Launch Climate Node &rarr;</Link>
+          </div>
+
+          <div className="gsap-card bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.08] p-8 rounded-3xl flex flex-col justify-between space-y-6 hover:border-white/20 transition-all duration-300 shadow-xl relative overflow-hidden group">
+            <div className="space-y-4">
+              <div className="h-10 w-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-xl">📰</div>
+              <h3 className="text-xl font-bold tracking-tight text-white group-hover:text-cyan-400 transition-colors">Intelligence News Core</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-light">
+                Aggregates real-time wire coverage across specific international fields. Prompt the system via phrase vectors like <span className="text-cyan-400 font-medium font-mono">"News about robotics"</span> to execute state sorting pipelines cleanly.
+              </p>
+            </div>
+            <Link to="/news" className="text-xs font-bold tracking-wider uppercase text-white hover:underline underline-offset-4 pt-4 block">Launch Wire Feed &rarr;</Link>
+          </div>
+
+          <div className="gsap-card bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.08] p-8 rounded-3xl space-y-4 shadow-xl">
+            <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl">🎙️</div>
+            <h3 className="text-xl font-bold tracking-tight text-white">Natural Speech Architecture</h3>
+            <p className="text-xs text-slate-400 leading-relaxed font-light">
+              Powered by native browser Web Speech parameters. Decodes raw acoustic vocal strings to perform routing state operations safely without additional backend layout requests.
             </p>
           </div>
 
-          <div className="space-y-3">
-            <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">02 // CONTENT PROCESSING</span>
-            <h3 className="text-lg font-medium text-white">Intelligence Matrix Pipeline</h3>
-            <p className="text-sm text-slate-400 font-light leading-relaxed">
-              Ingests modern news distributions through direct topic requests. Features automated element overlays avoiding standard structural card boundaries for an immersive browsing workflow.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">03 // VOICE RECOGNITION</span>
-            <h3 className="text-lg font-medium text-white">Native Natural Language Parsing</h3>
-            <p className="text-sm text-slate-400 font-light leading-relaxed">
-              A background-monitored intent pipeline powered entirely by local Web Speech API bindings. Parses vocal commands instantly to handle application cross-routing securely.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">04 // INTERPOLATION DESIGN</span>
-            <h3 className="text-lg font-medium text-white">Editorial Motion Layout</h3>
-            <p className="text-sm text-slate-400 font-light leading-relaxed">
-              Built on production-ready GSAP configurations that avoid unpolished preset animations, prioritizing sleek opacity shifts and typography delays to ensure strict design system guidelines.
+          <div className="gsap-card bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.08] p-8 rounded-3xl space-y-4 shadow-xl">
+            <div className="h-10 w-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-xl">🌪️</div>
+            <h3 className="text-xl font-bold tracking-tight text-white">GSAP Tween Interleaving</h3>
+            <p className="text-xs text-slate-400 leading-relaxed font-light">
+              Engineered with clean transform matrix offsets that completely replace standard tracking layouts. Ensures seamless UI transitions on mobile and desktop viewports.
             </p>
           </div>
 
@@ -233,7 +244,7 @@ function DashboardHub() {
 }
 
 // ==========================================
-// 4. MAIN LAYOUT AND CORE ROUTING
+// 4. MAIN ENTRY & INTELLIGENT ROUTER
 // ==========================================
 function MainLayoutWrapper() {
   const navigate = useNavigate();
@@ -284,11 +295,10 @@ function MainLayoutWrapper() {
     <div className="min-h-screen bg-slate-950 flex flex-col font-sans overflow-x-hidden text-white antialiased selection:bg-white selection:text-black">
       <GlobalNavigationBar onVoiceCommand={handleSmartVoiceParsing} />
 
-      {/* Sophisticated subtle notice bar for voice streaming status */}
       {voiceLog && (
-        <div className="w-full bg-white/[0.02] border-b border-white/[0.04] px-8 py-3 text-left text-[10px] font-mono tracking-widest text-slate-400 flex items-center gap-3">
-          <span className="h-1 w-1 rounded-full bg-indigo-400 animate-ping" />
-          LOG // TRANSCRIPT LOGGED: "{voiceLog.toUpperCase()}"
+        <div className="w-full bg-indigo-500/10 border-b border-indigo-500/20 px-6 py-2.5 text-center text-[11px] font-mono tracking-wider text-indigo-300 flex items-center justify-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping" />
+          SYSTEM // CAPTURED COMMAND: "{voiceLog.toUpperCase()}"
         </div>
       )}
 
@@ -299,9 +309,9 @@ function MainLayoutWrapper() {
         <Route 
           path="*" 
           element={
-            <div className="flex-1 flex flex-col items-center justify-center text-white min-h-[60vh]">
-              <h2 className="text-xs uppercase font-mono tracking-[0.2em] text-slate-500">404 // Node Absent</h2>
-              <Link to="/" className="mt-4 text-xs underline underline-offset-4 font-semibold text-white tracking-widest uppercase">
+            <div className="flex-1 flex flex-col items-center justify-center text-white min-h-[50vh]">
+              <h2 className="text-xs uppercase font-mono tracking-widest text-slate-500">404 // Node Absent</h2>
+              <Link to="/" className="mt-4 text-xs underline underline-offset-4 font-bold tracking-wider uppercase text-white">
                 Return Dashboard
               </Link>
             </div>
