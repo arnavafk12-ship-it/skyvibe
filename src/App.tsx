@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 're
 import { gsap } from 'gsap';
 
 // ==========================================
-// 1. LIVE ATMOSPHERIC SYSTEM (WEATHER ENGINE)
+// 1. ADVANCED WEATHER METRICS DASHBOARD
 // ==========================================
 interface SubAppProps {
   voiceCity?: string;
@@ -16,65 +16,144 @@ function WeatherApp({ voiceCity }: SubAppProps) {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    const target = voiceCity || 'London';
+    const target = voiceCity || 'New York';
     setLoading(true);
     setError("");
 
-    // wttr.in gives live weather instantly without needing api keys
     fetch(`https://wttr.in/${encodeURIComponent(target)}?format=j1`)
       .then((res) => {
-        if (!res.ok) throw new Error("Network protocol telemetry mismatch");
+        if (!res.ok) throw new Error("Telemetry payload failure");
         return res.json();
       })
       .then((json) => {
         const current = json.current_condition[0];
         const area = json.nearest_area[0];
+        const day = json.weather[0];
         
-        const extractedData = {
+        setData({
           temp: current.temp_C,
           desc: current.weatherDesc[0].value,
           humidity: current.humidity,
+          windSpeed: current.windspeedKmh,
+          pressure: current.pressure,
+          visibility: current.visibility,
+          feelsLike: current.FeelsLikeC,
           city: area.areaName[0].value,
-          country: area.country[0].value
-        };
-
-        setData(extractedData);
+          country: area.country[0].value,
+          precip: current.precipMM,
+          uvIndex: current.uvIndex,
+          maxtemp: day.maxtempC,
+          mintemp: day.mintempC,
+          sunrise: day.astronomy[0].sunrise,
+          sunset: day.astronomy[0].sunset
+        });
         setLoading(false);
 
-        // Instant high-fidelity voice transmission feedback
-        const readout = `Weather report for ${extractedData.city}, ${extractedData.country}. It is currently ${extractedData.temp} degrees Celsius with ${extractedData.desc}.`;
+        const readout = `Weather dashboard loaded for ${area.areaName[0].value}.`;
         const speech = new SpeechSynthesisUtterance(readout);
         window.speechSynthesis.speak(speech);
       })
       .catch((err) => {
         console.error(err);
-        setError("Unable to process location vectors.");
+        setError("Vector tracking lost. Verify terminal location query.");
         setLoading(false);
       });
   }, [voiceCity]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-2xl mx-auto min-h-[50vh]">
+    <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-10 text-white min-h-[85vh] flex flex-col justify-center">
       {loading && (
-        <div className="space-y-2 animate-pulse">
-          <span className="text-4xl block">⚡</span>
-          <p className="text-xs font-mono text-slate-400">LOADING METRICS LAYER...</p>
+        <div className="flex flex-col items-center justify-center space-y-3 animate-pulse">
+          <div className="h-8 w-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+          <p className="text-xs font-mono text-slate-500 tracking-widest">SYNCHRONIZING WEATHER TELEMETRY...</p>
         </div>
       )}
 
-      {error && <p className="text-xs font-mono text-red-400">{error}</p>}
+      {error && (
+        <div className="text-center">
+          <p className="text-sm font-mono text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl inline-block">{error}</p>
+        </div>
+      )}
 
       {!loading && !error && data && (
-        <div className="space-y-4">
-          <span className="text-6xl block">☀️</span>
-          <h2 className="text-3xl font-extrabold tracking-tight text-white">{data.city}</h2>
-          <p className="text-xs font-mono text-slate-400 tracking-widest uppercase">{data.country}</p>
+        <div className="space-y-6 w-full">
           
-          <div className="bg-white/[0.02] border border-white/[0.06] p-6 rounded-2xl inline-block min-w-[240px] text-left space-y-2">
-            <p className="text-xs text-slate-400">Temperature: <span className="text-white font-bold float-right">{data.temp}°C</span></p>
-            <p className="text-xs text-slate-400">Condition: <span className="text-amber-400 font-bold float-right capitalize">{data.desc}</span></p>
-            <p className="text-xs text-slate-400">Humidity: <span className="text-white font-bold float-right">{data.humidity}%</span></p>
+          {/* Dashboard Header Track */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-white/[0.08] pb-6 gap-4">
+            <div>
+              <span className="text-[10px] font-mono tracking-[0.3em] text-amber-400 uppercase block mb-1">Live Climate Terminal</span>
+              <h2 className="text-4xl font-extrabold tracking-tight">{data.city}</h2>
+              <p className="text-xs text-slate-400 mt-0.5 font-medium tracking-wide">{data.country}</p>
+            </div>
+            <div className="font-mono text-xs text-slate-500">
+              NODE // ACTIVE <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block ml-1 animate-pulse" />
+            </div>
           </div>
+
+          {/* Core Dashboard Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Primary Hero Panel */}
+            <div className="md:col-span-2 bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.08] p-8 rounded-3xl flex flex-col justify-between min-h-[280px] shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 text-7xl opacity-10">☀️</div>
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-mono tracking-wider text-slate-400 uppercase">Primary Atmospheric Layer</span>
+                <span className="text-xs font-mono bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md text-amber-400 capitalize">{data.desc}</span>
+              </div>
+              <div className="flex items-baseline gap-2 my-6">
+                <span className="text-7xl md:text-8xl font-black tracking-tighter">{data.temp}</span>
+                <span className="text-3xl md:text-4xl font-light text-slate-400">°C</span>
+              </div>
+              <div className="flex gap-4 text-xs font-mono text-slate-400">
+                <span>Hi: <strong className="text-white">{data.maxtemp}°</strong></span>
+                <span>Lo: <strong className="text-white">{data.mintemp}°</strong></span>
+                <span>Feels Like: <strong className="text-amber-400">{data.feelsLike}°C</strong></span>
+              </div>
+            </div>
+
+            {/* Side Analytics Row */}
+            <div className="grid grid-cols-2 gap-4 md:flex md:flex-col md:justify-between md:gap-0 md:space-y-4">
+              <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Humidity Ratio</span>
+                <div className="text-3xl font-bold tracking-tight mt-2">{data.humidity}%</div>
+                <div className="w-full bg-white/5 h-1 rounded-full mt-3 overflow-hidden">
+                  <div className="bg-blue-400 h-full rounded-full" style={{ width: `${data.humidity}%` }} />
+                </div>
+              </div>
+              <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Wind Vectors</span>
+                <div className="text-3xl font-bold tracking-tight mt-2">{data.windSpeed} <span className="text-xs text-slate-400 font-sans">km/h</span></div>
+                <span className="text-[9px] text-slate-500 font-mono mt-2">VELOCITY MAPPER</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Micro Telemetry Multi-Panel */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-white/[0.01] border border-white/[0.05] p-4 rounded-2xl">
+              <span className="text-[10px] font-mono text-slate-500 block">BAROMETRIC</span>
+              <span className="text-sm font-semibold mt-1 block">{data.pressure} hPa</span>
+            </div>
+            <div className="bg-white/[0.01] border border-white/[0.05] p-4 rounded-2xl">
+              <span className="text-[10px] font-mono text-slate-500 block">VISIBILITY</span>
+              <span className="text-sm font-semibold mt-1 block">{data.visibility} km</span>
+            </div>
+            <div className="bg-white/[0.01] border border-white/[0.05] p-4 rounded-2xl">
+              <span className="text-[10px] font-mono text-slate-500 block">PRECIPITATION</span>
+              <span className="text-sm font-semibold mt-1 block">{data.precip} mm</span>
+            </div>
+            <div className="bg-white/[0.01] border border-white/[0.05] p-4 rounded-2xl">
+              <span className="text-[10px] font-mono text-slate-500 block">UV INDEX</span>
+              <span className="text-sm font-semibold mt-1 block text-amber-400">{data.uvIndex}</span>
+            </div>
+            <div className="bg-white/[0.01] border border-white/[0.05] p-4 rounded-2xl col-span-2 md:col-span-1">
+              <span className="text-[10px] font-mono text-slate-500 block">ASTRONOMY</span>
+              <span className="text-[11px] font-medium text-slate-300 mt-1 block">🌅 {data.sunrise}</span>
+              <span className="text-[11px] font-medium text-slate-300 block">🌇 {data.sunset}</span>
+            </div>
+          </div>
+
         </div>
       )}
     </div>
@@ -82,7 +161,7 @@ function WeatherApp({ voiceCity }: SubAppProps) {
 }
 
 // ==========================================
-// 2. LIVE ARTICLE SYSTEM (INTELLIGENCE WIRE)
+// 2. DEEP NEWS WIRE TERMINAL DASHBOARD
 // ==========================================
 function NewsApp({ voiceTopic }: SubAppProps) {
   const [articles, setArticles] = useState<any[]>([]);
@@ -93,78 +172,92 @@ function NewsApp({ voiceTopic }: SubAppProps) {
     setLoading(true);
     setError("");
     
-    // Fallback public payload parsing to ensure lightning-fast execution in local testing environments
-    fetch(`https://api.spaceflightnewsapi.net/v4/articles/?limit=3`)
+    fetch(`https://api.spaceflightnewsapi.net/v4/articles/?limit=6`)
       .then((res) => {
-        if (!res.ok) throw new Error("Global content stream failure");
+        if (!res.ok) throw new Error("Content stream node failure");
         return res.json();
       })
       .then((json) => {
         const query = voiceTopic ? voiceTopic.toLowerCase() : "";
-        
-        // Filter dynamically on the frontend if a specific keyword target exists
         let filtered = json.results;
+        
         if (query && query !== "top headlines") {
           filtered = json.results.filter((art: any) => 
             art.title.toLowerCase().includes(query) || art.summary.toLowerCase().includes(query)
           );
         }
 
-        // Fallback default structure if localized matching arrays return zero entries
-        if (filtered.length === 0) {
-          filtered = json.results;
-        }
+        if (filtered.length === 0) filtered = json.results;
 
         setArticles(filtered);
         setLoading(false);
 
         if (filtered.length > 0) {
-          const readout = `Streaming top update regarding ${voiceTopic || 'Global Operations'}. Header reads: ${filtered[0].title}`;
+          const readout = `Streaming updates regarding ${voiceTopic || 'Global Feeds'}.`;
           const speech = new SpeechSynthesisUtterance(readout);
           window.speechSynthesis.speak(speech);
         }
       })
       .catch((err) => {
         console.error(err);
-        setError("Unable to map content streams.");
+        setError("Unable to map context metrics.");
         setLoading(false);
       });
   }, [voiceTopic]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-3xl mx-auto min-h-[50vh] w-full">
+    <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-10 text-white min-h-[85vh] flex flex-col justify-center">
       {loading && (
-        <div className="space-y-2 text-center animate-pulse">
-          <span className="text-4xl block">⚡</span>
-          <p className="text-xs font-mono text-slate-400">INGESTING WIRE TELEMETRY...</p>
+        <div className="flex flex-col items-center justify-center space-y-3 animate-pulse">
+          <div className="h-8 w-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+          <p className="text-xs font-mono text-slate-500 tracking-widest">INGESTING GLOBAL INTELLIGENCE STREAMS...</p>
         </div>
       )}
 
       {error && <p className="text-xs font-mono text-red-400 text-center">{error}</p>}
 
       {!loading && !error && (
-        <div className="w-full space-y-6">
-          <div className="text-center mb-4">
-            <span className="text-4xl block mb-2">📰</span>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Wire Intelligence Matrix</h2>
-            <p className="text-xs font-mono text-cyan-400 mt-1">INDEX: {voiceTopic ? voiceTopic.toUpperCase() : 'TOP_HEADLINES'}</p>
+        <div className="space-y-6 w-full">
+          
+          {/* Dashboard Header Track */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-white/[0.08] pb-6 gap-4">
+            <div>
+              <span className="text-[10px] font-mono tracking-[0.3em] text-cyan-400 uppercase block mb-1">Intelligence Wire Control</span>
+              <h2 className="text-4xl font-extrabold tracking-tight">Global Wire Monitor</h2>
+              <p className="text-xs text-slate-400 mt-0.5 font-medium tracking-wide">Target Topic Parameter: <span className="text-white font-mono">{voiceTopic ? voiceTopic.toUpperCase() : 'ALL_STREAMS'}</span></p>
+            </div>
+            <div className="font-mono text-xs text-slate-500">
+              BUFFER // COMPILING [{articles.length}] INDEX NODES
+            </div>
           </div>
 
-          <div className="space-y-4">
+          {/* Deep Cards Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((art: any) => (
               <a 
                 key={art.id} 
                 href={art.url} 
                 target="_blank" 
                 rel="noreferrer" 
-                className="block bg-white/[0.02] border border-white/[0.05] p-5 rounded-2xl hover:border-cyan-500/30 hover:bg-white/[0.04] transition-all"
+                className="group flex flex-col justify-between bg-gradient-to-br from-white/[0.02] to-white/[0.005] border border-white/[0.06] p-6 rounded-2xl hover:border-cyan-500/30 hover:bg-white/[0.03] transition-all duration-300 shadow-xl min-h-[220px]"
               >
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block mb-1">{art.news_site || 'Global Stream'}</span>
-                <h4 className="text-sm font-semibold text-white leading-snug">{art.title}</h4>
-                <p className="text-xs text-slate-400 mt-2 line-clamp-2 font-light">{art.summary}</p>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-500">
+                    <span className="uppercase tracking-wider text-cyan-400">{art.news_site || 'Global Wire'}</span>
+                    <span>{new Date(art.published_at).toLocaleDateString()}</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors leading-snug line-clamp-2">{art.title}</h4>
+                  <p className="text-xs text-slate-400 font-light leading-relaxed line-clamp-3">{art.summary}</p>
+                </div>
+                
+                <div className="pt-4 border-t border-white/[0.04] flex justify-between items-center text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">
+                  <span>LAUNCH WIRE DECK</span>
+                  <span>&rarr;</span>
+                </div>
               </a>
             ))}
           </div>
+
         </div>
       )}
     </div>
@@ -172,7 +265,7 @@ function NewsApp({ voiceTopic }: SubAppProps) {
 }
 
 // ==========================================
-// 3. RESPONSIVE NAVIGATION WITH ICONS
+// 3. CORE PLATFORM NAVIGATION
 // ==========================================
 interface NavigationProps {
   onVoiceCommand: (text: string) => void;
@@ -206,7 +299,7 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
 
   const toggleVoiceMatrix = () => {
     if (!recognitionRef.current) {
-      alert("Acoustic hardware parameters are unsupported.");
+      alert("Acoustic hardware modules missing.");
       return;
     }
     if (isListening) recognitionRef.current.stop();
@@ -230,10 +323,10 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
               <span>🏠</span> Hub
             </Link>
             <Link to="/weather" className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-2 ${isActive('/weather') ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}>
-              <span>☀️</span> Climate
+              <span>☀️</span> Climate Dashboard
             </Link>
             <Link to="/news" className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-2 ${isActive('/news') ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}>
-              <span>📰</span> News
+              <span>📰</span> News Deck
             </Link>
           </div>
 
@@ -243,7 +336,7 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
               isListening ? 'bg-red-500 border-red-400 animate-pulse text-white' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
             }`}
           >
-            <span>🎙️</span> {isListening ? 'Listening...' : 'Voice Control'}
+            <span>🎙️</span> {isListening ? 'Listening...' : 'Voice Command'}
           </button>
         </div>
 
@@ -261,7 +354,7 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
           >
             <span className={`h-0.5 w-5 bg-white transition-all duration-200 ${isOpen ? 'rotate-45 translate-y-[4px]' : ''}`} />
             <span className={`h-0.5 w-5 bg-white transition-all duration-200 ${isOpen ? 'opacity-0' : 'opacity-100'}`} />
-            <span className={`h-0.5 w-5 bg-white transition-all duration-200 ${isOpen ? '-rotate-45 translate-y-[-4px]' : ''}`} />
+            <span className={`h-0.5 w-5 bg-white transition-all duration-200 ${isOpen ? '-rotate-45 translate-y-[4px]' : ''}`} />
           </button>
         </div>
 
@@ -273,10 +366,10 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
             <span>🏠</span> Dashboard Hub
           </Link>
           <Link to="/weather" onClick={() => setIsOpen(false)} className={`p-3 rounded-xl text-xs font-bold tracking-wider uppercase flex items-center gap-3 ${isActive('/weather') ? 'bg-amber-500 text-slate-950' : 'bg-white/5 text-white'}`}>
-            <span>☀️</span> SkyVibe Climate
+            <span>☀️</span> Climate Dashboard
           </Link>
           <Link to="/news" onClick={() => setIsOpen(false)} className={`p-3 rounded-xl text-xs font-bold tracking-wider uppercase flex items-center gap-3 ${isActive('/news') ? 'bg-cyan-500 text-slate-950' : 'bg-white/5 text-white'}`}>
-            <span>📰</span> Intelligence Wire
+            <span>📰</span> News Dashboard
           </Link>
         </div>
       )}
@@ -285,7 +378,7 @@ function GlobalNavigationBar({ onVoiceCommand }: NavigationProps) {
 }
 
 // ==========================================
-// 4. CENTRAL HUB PLATFORM INTERFACE
+// 4. MAIN CENTRAL PORTAL HUB OVERVIEW
 // ==========================================
 function DashboardHub() {
   useEffect(() => {
@@ -319,10 +412,10 @@ function DashboardHub() {
               <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl">☀️</div>
               <h3 className="text-xl font-bold tracking-tight text-white group-hover:text-amber-400 transition-colors">Atmospheric Telemetry Network</h3>
               <p className="text-xs text-slate-400 leading-relaxed font-light">
-                Processes complex localized weather streams and structural matrix variables. Say commands like <span className="text-amber-400 font-medium font-mono">"Weather in Chicago"</span> to auto-navigate and trigger immediate structural audio translations.
+                Processes complex localized weather streams and structural matrix variables. Say commands like <span className="text-amber-400 font-medium font-mono">"Weather in Paris"</span> to auto-navigate and trigger immediate structural audio translations.
               </p>
             </div>
-            <Link to="/weather" className="text-xs font-bold tracking-wider uppercase text-white hover:underline underline-offset-4 pt-4 block">Launch Climate Node &rarr;</Link>
+            <Link to="/weather" className="text-xs font-bold tracking-wider uppercase text-white hover:underline underline-offset-4 pt-4 block">Launch Climate Dashboard &rarr;</Link>
           </div>
 
           <div className="gsap-card bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.08] p-8 rounded-3xl flex flex-col justify-between space-y-6 hover:border-white/20 transition-all duration-300 shadow-xl group">
@@ -333,7 +426,7 @@ function DashboardHub() {
                 Aggregates real-time wire coverage across specific international fields. Prompt the system via phrase vectors like <span className="text-cyan-400 font-medium font-mono">"News about science"</span> to execute state sorting pipelines cleanly.
               </p>
             </div>
-            <Link to="/news" className="text-xs font-bold tracking-wider uppercase text-white hover:underline underline-offset-4 pt-4 block">Launch Wire Feed &rarr;</Link>
+            <Link to="/news" className="text-xs font-bold tracking-wider uppercase text-white hover:underline underline-offset-4 pt-4 block">Launch Wire Deck &rarr;</Link>
           </div>
 
         </div>
@@ -344,7 +437,7 @@ function DashboardHub() {
 }
 
 // ==========================================
-// 5. CORE INITIALIZATION ENGINE
+// 5. GLOBAL EXECUTIVE CORE ENGINE
 // ==========================================
 function MainLayoutWrapper() {
   const navigate = useNavigate();
