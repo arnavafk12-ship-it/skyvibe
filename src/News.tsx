@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 
 // ==========================================
@@ -43,7 +43,7 @@ interface SettingsProps {
 const TRANSLATIONS: Record<string, any> = {
   en: {
     brief: (query: string, count: number, topSource: string, title: string) => 
-      `Live news telemetry update for query index ${query}. The dispatch center has aggregated ${count} active global reports. The primary headline is anchored by ${topSource}, stating: ${title}.`,
+      `Live news telemetry update for segment ${query}. The dispatch center has aggregated ${count} active global reports. The primary headline is anchored by ${topSource}, stating: ${title}.`,
     prompt: "Would you like a full chronological narration of the remaining news feed summaries?",
     signOff: "Broadcast cycle terminated. Standing by for next sync.",
     feedIntro: "Commencing secondary index lookahead sequence.",
@@ -59,7 +59,7 @@ const TRANSLATIONS: Record<string, any> = {
   },
   es: {
     brief: (query: string, count: number, topSource: string, title: string) => 
-      `Actualización de noticias en vivo para el índice ${query}. El centro de despacho ha acumulado ${count} informes globales activos. El titular principal está anclado por ${topSource}, afirmando: ${title}.`,
+      `Actualización de noticias en vivo para el segmento ${query}. El centro de despacho ha acumulado ${count} informes globales activos. El titular principal está anclado por ${topSource}, afirmando: ${title}.`,
     prompt: "¿Le gustaría una narración cronológica completa de los resúmenes restantes?",
     signOff: "Ciclo de transmisión terminado. Esperando próxima sincronización.",
     feedIntro: "Comenzando la secuencia de revisión del feed de noticias.",
@@ -67,7 +67,7 @@ const TRANSLATIONS: Record<string, any> = {
   },
   fr: {
     brief: (query: string, count: number, topSource: string, title: string) => 
-      `Mise à jour des informations en direct pour l'index ${query}. Le centre de répartition a agrégé ${count} rapports mondiaux actifs. Le titre principal est ancré par ${topSource}, déclarant: ${title}.`,
+      `Mise à jour des informations en direct pour le segment ${query}. Le centre de répartition a agrégé ${count} rapports mondiaux actifs. Le titre principal est ancré par ${topSource}, déclarant: ${title}.`,
     prompt: "Souhaitez-vous une narration chronologique complète des autres résumés de l'actualité ?",
     signOff: "Cycle de diffusion terminé. En attente de la prochaine synchronisation.",
     feedIntro: "Début de la séquence d'analyse du flux secondaire.",
@@ -75,7 +75,7 @@ const TRANSLATIONS: Record<string, any> = {
   },
   de: {
     brief: (query: string, count: number, topSource: string, title: string) => 
-      `Live-Nachrichten-Update für den Suchindex ${query}. Die Zentrale hat ${count} aktive globale Berichte aggregiert. Die Hauptschlagzeile stammt von ${topSource} und lautet: ${title}.`,
+      `Live-Nachrichten-Update für den Suchsegment ${query}. Die Zentrale hat ${count} aktive globale Berichte aggregiert. Die Hauptschlagzeile stammt von ${topSource} und lautet: ${title}.`,
     prompt: "Möchten Sie eine vollständige chronologische Vorlesung der restlichen Nachrichten-Feeds?",
     signOff: "Übertragungszyklus beendet. Bereit für die nächste Synchronisierung.",
     feedIntro: "Beginne mit der Analyse der sekundären Nachrichten-Feeds.",
@@ -83,7 +83,7 @@ const TRANSLATIONS: Record<string, any> = {
   },
   it: {
     brief: (query: string, count: number, topSource: string, title: string) => 
-      `Aggiornamento notizie in tempo reale per l'indice ${query}. Il centro informazioni ha aggregato ${count} report globali attivi. Il titolo principale è gestito da ${topSource}, che afferma: ${title}.`,
+      `Aggiornamento notizie in tempo reale per il segmento ${query}. Il centro informazioni ha aggregato ${count} report globali attivi. Il titolo principale è gestito da ${topSource}, che afferma: ${title}.`,
     prompt: "Desideri una narrazione cronologica completa dei restanti riassunti delle notizie?",
     signOff: "Ciclo di trasmissione terminato. In attesa del prossimo aggiornamento.",
     feedIntro: "Inizio della sequenza di analisi del feed secondario.",
@@ -189,7 +189,7 @@ export default function NewsApp() {
   const [news, setNews] = useState<NewsData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('Technology');
+  const [searchQuery, setSearchQuery] = useState<string>('Top Headlines');
   const [anchoredIndex, setAnchoredIndex] = useState<number | null>(null);
   
   // Audio Config Settings States
@@ -204,16 +204,19 @@ export default function NewsApp() {
     setLoading(true);
     setError(null);
     try {
-      const formattedQuery = encodeURIComponent(query.trim() || 'Global');
-      const newsRes = await fetch(
-        `https://api.spaceflightnewsapi.net/v4/articles?limit=11&search=${formattedQuery}`
-      );
+      let url = 'https://api.spaceflightnewsapi.net/v4/articles?limit=10';
       
+      // If user inputs a specific category, filter by it, otherwise grab general top trending items
+      if (query && query !== 'Top Headlines') {
+        url += `&search=${encodeURIComponent(query.trim())}`;
+      }
+
+      const newsRes = await fetch(url);
       if (!newsRes.ok) throw new Error('Failed to load global wire transmissions.');
       const data = await newsRes.json();
 
       if (!data.results || data.results.length === 0) {
-        throw new Error('No articles found matching index signature.');
+        throw new Error('No articles found matching trending indexing parameters.');
       }
 
       const mappedArticles: Article[] = data.results.map((item: any) => ({
@@ -233,14 +236,14 @@ export default function NewsApp() {
       setAnchoredIndex(null); 
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
-      else setError('An unexpected runtime news grid crash occurred.');
+      else setError('An unexpected news pipeline framework crash occurred.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchNewsByQuery('Technology');
+    fetchNewsByQuery('Top Headlines');
 
     const loadSystemVoices = () => {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -263,9 +266,9 @@ export default function NewsApp() {
 
   const getNewsTheme = (query: string): ThemeConfig => {
     const check = query.toLowerCase();
+    if (check.includes('headline') || check.includes('top')) return { text: 'Global Mainframe', icon: '🌐', bgClass: 'from-slate-900 via-indigo-950 to-black' };
     if (check.includes('tech') || check.includes('crypto')) return { text: 'Cyber Network', icon: '⚡', bgClass: 'from-cyan-900 via-slate-900 to-black' };
     if (check.includes('space') || check.includes('science')) return { text: 'Cosmic Operations', icon: '🚀', bgClass: 'from-purple-950 via-slate-900 to-zinc-950' };
-    if (check.includes('finance') || check.includes('money')) return { text: 'Market Index', icon: '📈', bgClass: 'from-emerald-900 via-zinc-900 to-black' };
     return { text: 'General Dispatch', icon: '📰', bgClass: 'from-slate-800 via-slate-950 to-neutral-950' };
   };
 
@@ -289,7 +292,7 @@ export default function NewsApp() {
 
     const langKey = getLangCode();
     const strings = TRANSLATIONS[langKey];
-    const topArticle = news.articles[anchoredIndex ?? 0];
+    const topArticle = news.articles[anchoredIndex || 0];
     
     const briefString = strings.brief(
       searchQuery, news.totalArticles, topArticle.source, topArticle.title
@@ -331,7 +334,7 @@ export default function NewsApp() {
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (searchQuery.trim()) fetchNewsByQuery(searchQuery);
+    fetchNewsByQuery(searchQuery || 'Top Headlines');
   };
 
   const currentTheme = getNewsTheme(searchQuery);
@@ -350,9 +353,9 @@ export default function NewsApp() {
           <form onSubmit={handleSearchSubmit} className="flex w-full sm:w-auto gap-2">
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Query Wire Topic..."
+              value={searchQuery === 'Top Headlines' ? '' : searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value || 'Top Headlines')}
+              placeholder="Filter Headlines..."
               className="w-full md:w-56 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-white text-white placeholder-white/40 shadow-inner"
             />
             <button type="submit" className="bg-white text-slate-900 hover:bg-white/90 text-sm font-extrabold px-5 py-2 rounded-xl transition-all active:scale-95 shadow-md">
@@ -404,7 +407,7 @@ export default function NewsApp() {
               <section className="bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex flex-col justify-between min-h-[240px] shadow-2xl">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-3xl font-black tracking-tight truncate max-w-[180px]">{searchQuery}</h2>
+                    <h2 className="text-2xl font-black tracking-tight truncate max-w-[180px]">{searchQuery}</h2>
                     <p className="text-white/60 font-semibold text-xs mt-1 uppercase tracking-widest">{currentTheme.text}</p>
                   </div>
                   <span className="text-5xl filter drop-shadow-md">{currentTheme.icon}</span>
@@ -426,15 +429,14 @@ export default function NewsApp() {
               </section>
             </div>
 
-            {/* Right Sided Chronological Article Feed Container with hidden scrollbars */}
+            {/* Right Sided Top Headlines Flow */}
             <section className="lg:col-span-2 bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl h-full">
               <h3 className="text-xs font-black tracking-widest uppercase text-white/60 mb-6 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-md animate-ping"></span> DATAFEED LOGIC FLOW (SELECT TO ANCHOR)
+                <span className="h-2 w-2 rounded-full bg-indigo-400 shadow-md animate-ping"></span> TOP 10 GLOBAL WIRE INDEX FLOW
               </h3>
               
-              {/* Scrollbar hidden via Tailwind variants */}
               <div className="space-y-4 max-h-[560px] overflow-y-auto pr-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {news.articles.map((article, index) => {
+                {news.articles.slice(0, 10).map((article, index) => {
                   return (
                     <motion.div 
                       key={index} 
@@ -444,7 +446,7 @@ export default function NewsApp() {
                     >
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-extrabold px-2.5 py-1 bg-white/10 rounded-lg text-white/70 border border-white/5">
-                          {article.source}
+                          TOP {index + 1} &bull; {article.source}
                         </span>
                         <span className="text-[11px] font-mono text-white/40">
                           {new Date(article.publishedAt).toLocaleDateString()}
@@ -474,13 +476,12 @@ export default function NewsApp() {
                 >
                   <div className="flex justify-between items-start border-b border-white/10 pb-4">
                     <div>
-                      <span className="text-[10px] font-black text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-md tracking-widest uppercase inline-block">
-                        🔥 ANCHORED WIRE DATA
+                      <span className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 border border-indigo-400/20 px-2.5 py-1 rounded-md tracking-widest uppercase inline-block">
+                        🔥 POPULAR GLOBAL TELEMETRY
                       </span>
                       <p className="text-[11px] font-mono text-white/40 mt-1">Source Pipeline: {activeAnchorArticle.source}</p>
                     </div>
                     
-                    {/* Pop-up Close Button Layout */}
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
