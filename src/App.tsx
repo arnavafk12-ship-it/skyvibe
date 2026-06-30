@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Settings from './Settings';
 
 // Strict Data Contract for Weather Data Vectors
@@ -19,7 +19,7 @@ interface ThemeConfig {
   bgClass: string;
 }
 
-// Localization Matrix mapped dynamically via voice language configurations
+// Expanded Localization Matrix supporting English, Hindi, Spanish, French, German, and Italian
 const TRANSLATIONS: Record<string, any> = {
   en: {
     brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
@@ -44,6 +44,30 @@ const TRANSLATIONS: Record<string, any> = {
     signOff: "Que tenga un excelente día, terminando transmisión.",
     hourlyIntro: "Aquí está el pronóstico cronológico de 10 horas.",
     hourlyItem: (time: string, temp: number) => `A las ${time}, estará a ${temp} grados Celsius.`
+  },
+  fr: {
+    brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
+      `Rapport météo en direct pour ${city}. L'indicateur principal affiche ${condition} à ${temp} degrés Celsius. L'humidité est de ${hum} pour cent, tandis que la probabilité de pluie est de ${rain} pour cent. L'indice de qualité de l'air est de ${aqi}, ce qui indique un statut ${status}. La vitesse actuelle du vent est de ${wind} kilomètres par heure.`,
+    prompt: "Souhaitez-vous écouter les prévisions horaires sur 10 heures ?",
+    signOff: "Bonne journée, fin de la transmission.",
+    hourlyIntro: "Voici vos prévisions chronologiques sur 10 heures.",
+    hourlyItem: (time: string, temp: number) => À ${time}, il fera ${temp} degrés Celsius.`
+  },
+  de: {
+    brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
+      `Live-Wetterbericht für ${city}. Die Hauptanzeige meldet ${condition} bei ${temp} Grad Celsius. Die Luftfeuchtigkeit liegt bei ${hum} Prozent, während die Regenwahrscheinlichkeit ${rain} Prozent beträgt. Der Luftqualitätsindex steht bei ${aqi}, was auf einen ${status} Zustand hinweist. Die aktuelle Windgeschwindigkeit beträgt ${wind} Kilometer pro Stunde.`,
+    prompt: "Möchten Sie den 10-Stunden-Stundenbericht hören?",
+    signOff: "Einen schönen Tag noch, Abmeldung.",
+    hourlyIntro: "Hier ist Ihre chronologische 10-Stunden-Vorschau.",
+    hourlyItem: (time: string, temp: number) => `Um ${time} werden es ${temp} Grad Celsius sein.`
+  },
+  it: {
+    brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
+      `Bollettino meteo in tempo reale per ${city}. L'indicatore principale mostra ${condition} a ${temp} gradi Celsius. L'umidità è al ${hum} percento, mentre la probabilità di pioggia è del ${rain} percento. L'indice di qualità dell'aria è ${aqi}, il che indica uno stato ${status}. La velocità del vento attuale è di ${wind} chilometri orari.`,
+    prompt: "Desideri ascoltare le previsioni orarie per le prossime 10 ore?",
+    signOff: "Buona giornata, fine della trasmissione.",
+    hourlyIntro: "Ecco le tue previsioni cronologiche per le prossime 10 ore.",
+    hourlyItem: (time: string, temp: number) => `Alle ore ${time}, ci saranno ${temp} gradi Celsius.`
   }
 };
 
