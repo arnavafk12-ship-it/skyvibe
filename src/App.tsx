@@ -1,34 +1,33 @@
 import { useEffect, useRef, useState } from "react";
-import { BrowserRouter, Routes, Route, Link,  useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// Initialize core animation registration metrics
 gsap.registerPlugin(ScrollTrigger);
 
 // ============================================================================
-// DATA ENGINE DECK (MOCK REPOSITORIES FOR CORE CONTINUITY)
+// DATA ENGINE DECK (MOCK DATA)
 // ============================================================================
 const ARCHITECTURE_METRICS = [
   {
     id: "01",
     title: "Asynchronous Asset Pipelines",
     tagline: "ASYNC_THREAD_ALLOCATION",
-    desc: "Maintains independent rendering pathways by isolating computation cycles away from primary system display fields, driving execution efficiency to optimum thresholds.",
+    desc: "Maintains independent rendering pathways by isolating computation cycles away from primary system display fields.",
     accent: "indigo"
   },
   {
     id: "02",
     title: "Dynamic Grid Interpolation",
     tagline: "LAYOUT_MATRIX_DYNAMICS",
-    desc: "Utilizes sub-pixel resolution calculations to dynamically adapt visual structural layers based on incoming payload data parameters seamlessly across device frames.",
+    desc: "Utilizes sub-pixel resolution calculations to dynamically adapt visual structural layers based on incoming payload data.",
     accent: "cyan"
   },
   {
     id: "03",
     title: "High-Fidelity Telemetry Modules",
     tagline: "REAL_TIME_STATE_LOGGING",
-    desc: "Tracks state transition sequences locally within micro-interaction scopes to immediately stream component rendering states to logging terminals.",
+    desc: "Tracks state transition sequences locally within micro-interaction scopes to immediately stream component rendering states.",
     accent: "purple"
   }
 ];
@@ -42,9 +41,6 @@ const ANALYTICS_DATA_STREAM = [
   { timestamp: "20:00", vector: "SYS_ZETA", load: 72, status: "MAINTENANCE" }
 ];
 
-// ============================================================================
-// SYSTEM UTILITIES & TEXT-TO-SPEECH HOOKS
-// ============================================================================
 function playSystemChime(frequency: number = 440, duration: number = 0.1) {
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -164,7 +160,7 @@ export function HeroStage() {
         <div className="space-y-10 text-center max-w-5xl mx-auto">
           <div className="system-badge inline-flex items-center gap-3 bg-white/[0.02] border border-white/[0.08] px-5 py-2.5 rounded-full backdrop-blur-xl">
             <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-            <span className="text-[10px] font-mono tracking-[0.3em] text-indigo-300 uppercase font-black">NEXUS ENTERPRISE PLATFORM FRAMEWORK</span>
+            <span className="text-[10px] font-mono tracking-[0.3em] text-indigo-300 uppercase font-black">NEXUS ENTERPRISE FRAMEWORK</span>
           </div>
 
           <h1 className="text-5xl md:text-8xl font-black tracking-tight leading-[0.92] text-white">
@@ -221,7 +217,7 @@ export function HeroStage() {
 }
 
 // ============================================================================
-// MODULE 2: WEATHER TERMINAL DECK
+// MODULE 2: WEATHER TERMINAL DECK (DYNAMIC CITY SEARCH CAPABLE)
 // ============================================================================
 interface WeatherProps {
   voiceCity?: string;
@@ -237,10 +233,11 @@ export function WeatherApp({ voiceCity }: WeatherProps) {
   useEffect(() => {
     const defaultQueryLocation = voiceCity || 'New York';
     setLoading(true);
+    setError("");
 
     fetch(`https://wttr.in/${encodeURIComponent(defaultQueryLocation)}?format=j1`)
       .then((res) => {
-        if (!res.ok) throw new Error("Telemetry sync failed on primary target.");
+        if (!res.ok) throw new Error("City data sync failed or city context missing.");
         return res.json();
       })
       .then((json) => {
@@ -269,23 +266,18 @@ export function WeatherApp({ voiceCity }: WeatherProps) {
           feelsLike: current.FeelsLikeC,
           city: area.areaName[0].value,
           country: area.country[0].value,
-          precip: current.precipMM,
-          uvIndex: current.uvIndex,
           maxtemp: day.maxtempC,
           mintemp: day.mintempC,
-          sunrise: day.astronomy[0].sunrise,
-          sunset: day.astronomy[0].sunset,
           hourly: processedHourly
         });
         setLoading(false);
 
-        const narrativeOutput = `Climate diagnostic complete for ${area.areaName[0].value}. It is ${current.temp_C} degrees. Say yes for the summary.`;
-        const dialogueUtterance = new SpeechSynthesisUtterance(narrativeOutput);
-        
+        const dialogueUtterance = new SpeechSynthesisUtterance(`Climate data configured for ${area.areaName[0].value}. Temperature reads ${current.temp_C} degrees.`);
         dialogueUtterance.onend = () => {
           setIsPromptActive(true);
           initializeUserVoiceInquiryChannel();
         };
+        window.speechSynthesis.cancel();
         window.speechSynthesis.speak(dialogueUtterance);
       })
       .catch((err) => {
@@ -315,7 +307,7 @@ export function WeatherApp({ voiceCity }: WeatherProps) {
     sessionRecognition.onresult = (event: any) => {
       const parsedTranscript = event.results[0][0].transcript.toLowerCase();
       if (parsedTranscript.includes("yes") || parsedTranscript.includes("sure")) {
-        const summaryNarrative = `Upcoming hours will trend around ${data.hourly[1]?.temp || data.temp} degrees with ${data.hourly[1]?.desc || data.desc}.`;
+        const summaryNarrative = `Upcoming hours look like ${data.hourly[1]?.temp || data.temp} degrees with ${data.hourly[1]?.desc || data.desc}.`;
         window.speechSynthesis.speak(new SpeechSynthesisUtterance(summaryNarrative));
       }
       setIsPromptActive(false);
@@ -327,15 +319,15 @@ export function WeatherApp({ voiceCity }: WeatherProps) {
   return (
     <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 text-white min-h-[85vh] flex flex-col justify-center">
       {loading ? (
-        <p className="text-center font-mono text-xs text-slate-500 animate-pulse">ACQUIRING STRATOSPHERIC METRIC FEEDS...</p>
+        <p className="text-center font-mono text-xs text-slate-500 animate-pulse">ACQUIRING WEATHER MATRICES...</p>
       ) : error ? (
-        <p className="text-center text-red-400">{error}</p>
+        <p className="text-center text-red-400 font-mono text-sm border border-red-500/20 bg-red-500/5 p-6 rounded-2xl">🚨 Error: {error}. Make sure the city name is typed correctly.</p>
       ) : (
         <div className="space-y-8 w-full">
           <div className="weather-cascade-node flex justify-between items-end border-b border-white/[0.08] pb-6">
             <div>
               <h2 className="text-4xl font-black">{data.city}</h2>
-              <p className="text-xs text-slate-500 mt-1 font-mono">{data.country.toUpperCase()} // METRIC_NODE</p>
+              <p className="text-xs text-slate-500 mt-1 font-mono">{data.country.toUpperCase()} // STATION_ACTIVE</p>
             </div>
             {isPromptActive && <div className="bg-amber-500 text-slate-950 font-mono text-[10px] px-3 py-1 rounded-full animate-bounce">🎙️ TALK NOW</div>}
           </div>
@@ -344,15 +336,17 @@ export function WeatherApp({ voiceCity }: WeatherProps) {
             <div className="weather-cascade-node lg:col-span-2 bg-gradient-to-br from-white/[0.03] to-transparent border border-white/[0.08] p-8 rounded-3xl">
               <span className="text-xs font-mono text-slate-400 capitalize">{data.desc}</span>
               <div className="text-7xl font-black my-4">{data.temp}°C</div>
+              <div className="text-xs text-slate-500 font-mono">Feels Like: {data.feelsLike}°C</div>
             </div>
             <div className="bg-white/[0.02] border border-white/[0.06] p-6 rounded-2xl flex flex-col justify-between">
-              <span className="text-[10px] font-mono text-slate-500 uppercase">Humidity</span>
-              <div className="text-3xl font-black">{data.humidity}%</div>
+              <span className="text-[10px] font-mono text-slate-500 uppercase">Humidity & Wind</span>
+              <div className="text-2xl font-black">{data.humidity}% Humidity</div>
+              <div className="text-sm text-slate-400 font-mono">{data.windSpeed} km/h Wind</div>
             </div>
           </div>
 
           <div className="weather-cascade-node bg-white/[0.01] border border-white/[0.05] rounded-3xl p-6 space-y-4">
-            <h4 className="text-xs font-mono text-slate-400 uppercase">10-Hour Forecast PROGRESSION</h4>
+            <h4 className="text-xs font-mono text-slate-400 uppercase">Timeline Forecast progression</h4>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {data.hourly.map((hour: any, idx: number) => (
                 <div key={idx} className="bg-white/[0.01] border border-white/[0.05] p-4 rounded-xl text-center">
@@ -488,7 +482,7 @@ export function NewsApp({ voiceTopic }: NewsProps) {
 }
 
 // ============================================================================
-// PLATFORM FRAMEWORK NAVIGATION CONTROL SYSTEM
+// GLOBAL CONTROLS NAVBAR WITH MANUAL SEARCH INPUT & SPEECH handshakes
 // ============================================================================
 interface NavigationControlProps {
   onVoiceIntentIngested: (parsedText: string) => void;
@@ -497,6 +491,7 @@ interface NavigationControlProps {
 function UniversalPlatformNavbar({ onVoiceIntentIngested }: NavigationControlProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isAcousticCapturing, setIsAcousticCapturing] = useState<boolean>(false);
+  const [textSearchQuery, setTextSearchQuery] = useState<string>("");
   const recognitionInstanceRef = useRef<any>(null);
 
   useEffect(() => {
@@ -512,20 +507,39 @@ function UniversalPlatformNavbar({ onVoiceIntentIngested }: NavigationControlPro
     }
   }, [onVoiceIntentIngested]);
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (textSearchQuery.trim()) {
+      onVoiceIntentIngested(`weather in ${textSearchQuery}`);
+      setTextSearchQuery("");
+    }
+  };
+
   return (
     <nav className="w-full bg-slate-950/70 backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-50 px-6 py-4">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-3">
+      <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
+        <Link to="/" className="flex items-center gap-3 shrink-0">
           <span className="text-white font-black tracking-[0.2em] text-xs font-mono">NEXUS.OS</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6">
+        {/* INPUT COMPONENT ADDED SECURELY */}
+        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-xs relative hidden sm:block">
+          <input 
+            type="text"
+            value={textSearchQuery}
+            onChange={(e) => setTextSearchQuery(e.target.value)}
+            placeholder="Type city name + Press Enter..."
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-1.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+          />
+        </form>
+
+        <div className="hidden md:flex items-center gap-6 shrink-0">
           <div className="flex gap-4 font-mono text-[10px]">
             <Link to="/" className="text-slate-400 hover:text-white">HUB</Link>
             <Link to="/weather" className="text-slate-400 hover:text-white">CLIMATE</Link>
             <Link to="/news" className="text-slate-400 hover:text-white">WIRE</Link>
           </div>
-          <button onClick={() => recognitionInstanceRef.current?.start()} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-mono">
+          <button onClick={() => recognitionInstanceRef.current?.start()} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-mono whitespace-nowrap">
             {isAcousticCapturing ? "LISTENING..." : "🎙️ VOICE INPUT"}
           </button>
         </div>
@@ -540,6 +554,15 @@ function UniversalPlatformNavbar({ onVoiceIntentIngested }: NavigationControlPro
 
       {isMobileMenuOpen && (
         <div className="absolute top-full left-0 w-full bg-slate-950/95 p-5 flex flex-col space-y-3 md:hidden border-b border-white/10">
+          <form onSubmit={handleSearchSubmit} className="w-full relative mb-2">
+            <input 
+              type="text"
+              value={textSearchQuery}
+              onChange={(e) => setTextSearchQuery(e.target.value)}
+              placeholder="Search city directly..."
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-mono text-white"
+            />
+          </form>
           <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-mono text-white p-2 bg-white/5 rounded-lg">HUB WORKSPACE</Link>
           <Link to="/weather" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-mono text-white p-2 bg-white/5 rounded-lg">CLIMATE HUB</Link>
           <Link to="/news" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-mono text-white p-2 bg-white/5 rounded-lg">WIRE INFRA</Link>
@@ -550,11 +573,11 @@ function UniversalPlatformNavbar({ onVoiceIntentIngested }: NavigationControlPro
 }
 
 // ============================================================================
-// MASTER APPLICATION LAYOUT WRAPPER SHELL
+// SYSTEM EXECUTION SHELL LAYER
 // ============================================================================
 function MasterApplicationLayoutShell() {
   const applicationRouteNavigator = useNavigate();
-  const [capturedVoiceLog, setCapturedVoiceLog] = useState<string>(``);
+  const [capturedVoiceLog, setCapturedVoiceLog] = useState<string>("");
   const [dynamicCityPayload, setDynamicCityPayload] = useState<string>("");
   const [dynamicTopicPayload, setDynamicTopicPayload] = useState<string>("");
 
@@ -564,7 +587,12 @@ function MasterApplicationLayoutShell() {
 
     if (cleanedTextString.includes('weather') || cleanedTextString.includes('climate')) {
       const segments = cleanedTextString.split(' in ');
-      if (segments[1]) setDynamicCityPayload(segments[1]);
+      if (segments[1]) {
+        setDynamicCityPayload(segments[1]);
+      } else {
+        const words = cleanedTextString.split(' ');
+        setDynamicCityPayload(words[words.length - 1]);
+      }
       applicationRouteNavigator('/weather');
     } 
     else if (cleanedTextString.includes('news') || cleanedTextString.includes('feed')) {
@@ -583,7 +611,7 @@ function MasterApplicationLayoutShell() {
       
       {capturedVoiceLog && (
         <div className="w-full bg-indigo-500/10 border-b border-indigo-500/15 px-6 py-2 text-center text-[10px] font-mono text-indigo-300 uppercase">
-          COMMAND: "{capturedVoiceLog}"
+          LOGGED COMMAND: "{capturedVoiceLog}"
         </div>
       )}
 
