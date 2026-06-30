@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Settings from './Settings';
+import Settings from './Settings.tsx';
 
 interface WeatherData {
   temperature: number;
