@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Settings from './Settings.tsx';
+import Settings from './Settings';
 
+// Strict Data Contract for Weather Data Vectors
 interface WeatherData {
   temperature: number;
   windspeed: number;
@@ -18,6 +19,7 @@ interface ThemeConfig {
   bgClass: string;
 }
 
+// Localization Matrix mapped dynamically via voice language configurations
 const TRANSLATIONS: Record<string, any> = {
   en: {
     brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
@@ -29,7 +31,7 @@ const TRANSLATIONS: Record<string, any> = {
   },
   hi: {
     brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
-      `${city} के लिए लाइव मौसम रिपोर्ट। मुख्य संकेतक ${temp} डिग्री सेल्सियस पर ${condition} दिखाता है। उमस ${hum} प्रतिशत है, जबकि बारिश की संभावना ${rain} प्रतिशत है। वायु गुणवत्ता सूचकांक ${aqi} है। हवा की गति ${wind} किलोमीटर प्रति घंटा है।`,
+      `${city} के लिए लाइव मौसम रिपोर्ट। मुख्य संकेतक ${temp} डिग्री सेल्सियस पर ${condition} दिखाता है। उमस ${hum} प्रतिशत है, जबकि बारिश की संभावना ${rain} प्रतिशत है। वायु गुणवत्ता सूचकांक ${aqi} है जो ${status} स्थिति को दर्शाता है। हवा की गति ${wind} किलोमीटर प्रति घंटा है।`,
     prompt: "क्या आप अगले 10 घंटे का मौसम पूर्वानुमान सुनना चाहते हैं?",
     signOff: "आपका दिन शुभ हो, अलविदा।",
     hourlyIntro: "अगले 10 घंटों का विवरण इस प्रकार है।",
@@ -37,7 +39,7 @@ const TRANSLATIONS: Record<string, any> = {
   },
   es: {
     brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
-      `Informe del clima para ${city}. El indicador principal muestra ${condition} a ${temp} grados Celsius. La humedad es del ${hum} por ciento y la probabilidad de lluvia es del ${rain} por ciento. El índice de calidad del aire es de ${aqi}. La velocidad del viento es de ${wind} kilómetros por hora.`,
+      `Informe del clima para ${city}. El indicador principal muestra ${condition} a ${temp} grados Celsius. La humedad es del ${hum} por ciento y la probabilidad de lluvia es del ${rain} por ciento. El índice de calidad del aire es de ${aqi}, lo que indica un estado ${status}. La velocidad del viento es de ${wind} kilómetros por hora.`,
     prompt: "¿Le gustaría escuchar la narración del pronóstico de 10 horas?",
     signOff: "Que tenga un excelente día, terminando transmisión.",
     hourlyIntro: "Aquí está el pronóstico cronológico de 10 horas.",
@@ -45,13 +47,13 @@ const TRANSLATIONS: Record<string, any> = {
   }
 };
 
-export default function UltimateWeatherDashboard() {
+export default function App() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [city, setCity] = useState<string>('Delhi');
   
-  // Audio Engine Configurations Setup
+  // Audio Engine Core States
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -215,7 +217,7 @@ export default function UltimateWeatherDashboard() {
   return (
     <div className={`min-h-screen w-full bg-gradient-to-br ${currentTheme.bgClass} flex flex-col items-center justify-start p-4 md:p-10 text-white transition-all duration-700 ease-in-out antialiased`}>
       
-      {/* App Header Structure */}
+      {/* Structural Application Layout Header */}
       <header className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
         <h1 className="text-xl font-black tracking-widest flex items-center gap-2">
           <span className="text-2xl">{currentTheme.icon}</span> SKYVIBE.IO
@@ -235,7 +237,7 @@ export default function UltimateWeatherDashboard() {
             </button>
           </form>
 
-          {/* Interactive Mechanical Gear Icon Toggle */}
+          {/* Mechanical Gear Trigger Button */}
           <button 
             onClick={() => setIsSettingsOpen(true)}
             className="p-2.5 bg-white/10 border border-white/10 hover:border-white/30 rounded-xl hover:scale-105 active:scale-95 transition-all text-xl"
@@ -246,7 +248,7 @@ export default function UltimateWeatherDashboard() {
         </div>
       </header>
 
-      {/* Dynamic Pop-up Overlay Injector */}
+      {/* Pop-up Overlay Configuration Matrix */}
       <Settings 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface SettingsProps {
     isOpen: boolean;
     onClose: () => void;
