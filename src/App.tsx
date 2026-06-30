@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import Settings from './Settings';
 
-// Strict Data Contract for Weather Data Vectors
+// ==========================================
+// 1. DATA CONTRACTS & TYPE INTERFACES
+// ==========================================
 interface WeatherData {
   temperature: number;
   windspeed: number;
@@ -19,7 +20,21 @@ interface ThemeConfig {
   bgClass: string;
 }
 
-// Expanded Localization Matrix supporting English, Hindi, Spanish, French, German, and Italian
+interface SettingsProps {
+  isOpen: boolean;
+  onClose: () => void;
+  voices: SpeechSynthesisVoice[];
+  selectedVoice: SpeechSynthesisVoice | null;
+  setSelectedVoice: (voice: SpeechSynthesisVoice | null) => void;
+  rate: number;
+  setRate: (rate: number) => void;
+  pitch: number;
+  setPitch: (pitch: number) => void;
+}
+
+// ==========================================
+// 2. EXPANDED LOCALIZATION MATRIX
+// ==========================================
 const TRANSLATIONS: Record<string, any> = {
   en: {
     brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
@@ -51,7 +66,7 @@ const TRANSLATIONS: Record<string, any> = {
     prompt: "Souhaitez-vous écouter les prévisions horaires sur 10 heures ?",
     signOff: "Bonne journée, fin de la transmission.",
     hourlyIntro: "Voici vos prévisions chronologiques sur 10 heures.",
-    hourlyItem: (time: string, temp: number) => À ${time}, il fera ${temp} degrés Celsius.`
+    hourlyItem: (time: string, temp: number) => `À ${time}, il fera ${temp} degrés Celsius.`
   },
   de: {
     brief: (city: string, condition: string, temp: number, hum: number, rain: number, aqi: number, status: string, wind: number) => 
@@ -71,13 +86,107 @@ const TRANSLATIONS: Record<string, any> = {
   }
 };
 
+// ==========================================
+// 3. INTEGRATED SETTINGS OVERLAY MODULE
+// ==========================================
+function SettingsModal({ 
+  isOpen, onClose, voices, selectedVoice, setSelectedVoice, rate, setRate, pitch, setPitch 
+}: SettingsProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fadeIn">
+      <div className="bg-slate-900 border border-white/15 w-full max-w-lg rounded-3xl p-6 md:p-8 text-white shadow-2xl space-y-6">
+        
+        <div className="flex justify-between items-center border-b border-white/10 pb-4">
+          <div>
+            <h2 className="text-xl font-black tracking-wide">AUDIO CORE ENGINE</h2>
+            <p className="text-xs text-white/40 mt-0.5">Configure system synthesis parameters</p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-sm font-bold hover:bg-white/20 transition-all active:scale-90"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[11px] uppercase tracking-widest font-black text-white/50 block">Voice Architecture Profile</label>
+            <select
+              value={selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : ''}
+              onChange={(e) => {
+                const target = voices.find(v => `${v.name} (${v.lang})` === e.target.value);
+                if (target) setSelectedVoice(target);
+              }}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white text-white/90 shadow-inner"
+            >
+              {voices.map((voice, idx) => (
+                <option key={idx} value={`${voice.name} (${voice.lang})`} className="bg-slate-900 text-white">
+                  {voice.name} ({voice.lang}) {voice.localService ? '📦' : '🌐'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <div className="flex justify-between items-center text-xs font-bold text-white/70">
+              <span className="uppercase tracking-widest text-[11px] text-white/50">Tempo Rate Speed</span>
+              <span className="bg-white/10 px-2 py-0.5 rounded font-mono">{rate.toFixed(2)}x</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.05"
+              value={rate}
+              onChange={(e) => setRate(parseFloat(e.target.value))}
+              className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+            />
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <div className="flex justify-between items-center text-xs font-bold text-white/70">
+              <span className="uppercase tracking-widest text-[11px] text-white/50">Frequency Pitch Tuning</span>
+              <span className="bg-white/10 px-2 py-0.5 rounded font-mono">{pitch.toFixed(2)}x</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.05"
+              value={pitch}
+              onChange={(e) => setPitch(parseFloat(e.target.value))}
+              className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+            />
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-white/10 flex justify-end">
+          <button
+            onClick={onClose}
+            className="w-full sm:w-auto bg-white text-slate-950 font-black px-6 py-2.5 text-xs tracking-wider rounded-xl hover:bg-white/90 active:scale-95 transition-all shadow-md"
+          >
+            APPLY METRICS
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 4. MAIN SKYVIBE ENGINE APPLICATION CORNER
+// ==========================================
 export default function App() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [city, setCity] = useState<string>('Delhi');
   
-  // Audio Engine Core States
+  // Audio Config Settings States
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -95,7 +204,7 @@ export default function App() {
       const geoData = await geoRes.json();
       
       if (!geoData.results || geoData.results.length === 0) {
-        throw new Error('City nahi mili! Sahi naam dalein.');
+        throw new Error('City match failed! Enter valid geographic name.');
       }
 
       const { latitude, longitude, name } = geoData.results[0];
@@ -104,7 +213,7 @@ export default function App() {
       const weatherRes = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relative_humidity_2m,precipitation_probability`
       );
-      if (!weatherRes.ok) throw new Error('Weather metrics load nahi ho paye.');
+      if (!weatherRes.ok) throw new Error('Failed to load telemetry vectors.');
       const data = await weatherRes.json();
 
       const aqiRes = await fetch(
@@ -124,7 +233,7 @@ export default function App() {
       });
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
-      else setError('An unexpected runtime crash occurred.');
+      else setError('An unexpected runtime engine crash occurred.');
     } finally {
       setLoading(false);
     }
@@ -138,6 +247,7 @@ export default function App() {
         const availableVoices = window.speechSynthesis.getVoices();
         setVoices(availableVoices);
 
+        // Intelligently find regional Hindi/English voice or fall back to system primary
         const preferredVoice = availableVoices.find(
           (v) => v.lang === 'en-IN' || v.lang.includes('en_IN')
         ) || availableVoices.find((v) => v.lang.includes('en')) || availableVoices[0];
@@ -155,15 +265,15 @@ export default function App() {
   const getWeatherTheme = (code: number): ThemeConfig => {
     if (code === 0) return { text: 'Clear Sky', icon: '☀️', bgClass: 'from-amber-500 via-orange-600 to-amber-950' };
     if (code >= 1 && code <= 3) return { text: 'Partly Cloudy', icon: '⛅', bgClass: 'from-blue-600 via-slate-700 to-slate-950' };
-    if (code >= 51 && code <= 67) return { text: 'Rainy Day', icon: '🌧️', bgClass: 'from-slate-700 via-indigo-950 to-zinc-950' };
-    if (code >= 95 && code <= 99) return { text: 'Thunderstorm', icon: '⛈️', bgClass: 'from-purple-900 via-zinc-900 to-black' };
-    return { text: 'Moderate Sky', icon: '🌍', bgClass: 'from-cyan-700 via-slate-800 to-slate-950' };
+    if (code >= 51 && code <= 67) return { text: 'Rainy Cascade', icon: '🌧️', bgClass: 'from-slate-700 via-indigo-950 to-zinc-950' };
+    if (code >= 95 && code <= 99) return { text: 'Electrical Thunderstorm', icon: '⛈️', bgClass: 'from-purple-900 via-zinc-900 to-black' };
+    return { text: 'Moderate Canopy', icon: '🌍', bgClass: 'from-cyan-700 via-slate-800 to-slate-950' };
   };
 
   const getAQIDesc = (aqi: number) => {
     if (aqi <= 50) return { text: 'Good Health Index', color: 'text-emerald-400' };
     if (aqi <= 100) return { text: 'Moderate Shield', color: 'text-yellow-400' };
-    return { text: 'Unhealthy/Poor', color: 'text-red-400' };
+    return { text: 'Poor/Unhealthy Vector', color: 'text-red-400' };
   };
 
   const getLangCode = () => {
@@ -235,14 +345,14 @@ export default function App() {
     if (city.trim()) fetchWeatherByCity(city);
   };
 
-  const currentTheme = weather ? getWeatherTheme(weather.weathercode) : { text: 'Syncing', icon: '🌍', bgClass: 'from-slate-950 to-black' };
+  const currentTheme = weather ? getWeatherTheme(weather.weathercode) : { text: 'Synchronizing Matrix', icon: '🌍', bgClass: 'from-slate-950 to-black' };
   const aqiDetails = weather ? getAQIDesc(weather.aqi) : { text: '', color: '' };
 
   return (
     <div className={`min-h-screen w-full bg-gradient-to-br ${currentTheme.bgClass} flex flex-col items-center justify-start p-4 md:p-10 text-white transition-all duration-700 ease-in-out antialiased`}>
       
-      {/* Structural Application Layout Header */}
-      <header className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
+      {/* Structural App Header Component */}
+      <header className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg animate-fadeIn">
         <h1 className="text-xl font-black tracking-widest flex items-center gap-2">
           <span className="text-2xl">{currentTheme.icon}</span> SKYVIBE.IO
         </h1>
@@ -253,27 +363,27 @@ export default function App() {
               type="text"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              placeholder="Search Global Matrix..."
+              placeholder="Query Global Node..."
               className="w-full md:w-56 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-white text-white placeholder-white/40 shadow-inner"
             />
             <button type="submit" className="bg-white text-slate-900 hover:bg-white/90 text-sm font-extrabold px-5 py-2 rounded-xl transition-all active:scale-95 shadow-md">
-              Search
+              Process
             </button>
           </form>
 
-          {/* Mechanical Gear Trigger Button */}
+          {/* Trigger Voice Configurations Panel Button */}
           <button 
             onClick={() => setIsSettingsOpen(true)}
             className="p-2.5 bg-white/10 border border-white/10 hover:border-white/30 rounded-xl hover:scale-105 active:scale-95 transition-all text-xl"
-            title="Configure System Voice Settings"
+            title="Configure Speech Synthesis Matrix"
           >
             ⚙️
           </button>
         </div>
       </header>
 
-      {/* Pop-up Overlay Configuration Matrix */}
-      <Settings 
+      {/* Embedded Component Injector */}
+      <SettingsModal 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         voices={voices}
@@ -288,19 +398,21 @@ export default function App() {
       {loading && (
         <div className="my-auto flex flex-col items-center gap-2 tracking-widest text-sm font-bold text-white/70">
           <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-          FETCHING CLIMATE INFRASTRUCTURE...
+          SYNCING GEOGRAPHIC CLIMATE ENVIRONMENT...
         </div>
       )}
 
       {error && (
-        <div className="my-auto bg-red-500/20 border border-red-500/40 p-4 rounded-2xl font-bold text-red-200 shadow-xl max-w-md text-center">
+        <div className="my-auto bg-red-500/20 border border-red-500/40 p-4 rounded-2xl font-bold text-red-200 shadow-xl max-w-md text-center animate-fadeIn">
           ⚠️ Core Exception: {error}
         </div>
       )}
 
       {weather && !loading && !error && (
         <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-fadeIn">
+          
           <div className="lg:col-span-1 space-y-6">
+            {/* Primary Core Metric Display Card */}
             <section className="bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex flex-col justify-between min-h-[220px] shadow-2xl">
               <div className="flex justify-between items-start">
                 <div>
@@ -321,18 +433,19 @@ export default function App() {
                     : 'bg-white text-slate-900 hover:bg-slate-100 shadow-white/10'
                 }`}
               >
-                {isSpeaking ? '⏹️ TERMINATE BRIEFING' : '🔊 INITIATE AI BRIEFING'}
+                {isSpeaking ? '⏹️ TERMINATE BRIEFING' : '🔊 RUN INTERACTIVE AI NARRATOR'}
               </button>
             </section>
 
+            {/* Grid Array for Secondary Environmental Sensors */}
             <section className="bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-5 grid grid-cols-2 gap-4 shadow-2xl">
               <div className="bg-white/5 border border-white/5 p-4 rounded-2xl shadow-sm">
-                <span className="text-[10px] font-black text-white/40 block tracking-widest mb-1 uppercase">Atmosphere AQI</span>
+                <span className="text-[10px] font-black text-white/40 block tracking-widest mb-1 uppercase">Air Quality Index</span>
                 <span className="text-3xl font-black block tracking-tight">{weather.aqi}</span>
-                <span className={`text-[11px] block font-bold mt-1 ${aqiDetails.color}`}>{aqiDetails.text}</span>
+                <span className={`text-[11px] block font-bold mt-1 tracking-tight truncate ${aqiDetails.color}`}>{aqiDetails.text}</span>
               </div>
               <div className="bg-white/5 border border-white/5 p-4 rounded-2xl shadow-sm">
-                <span className="text-[10px] font-black text-white/40 block tracking-widest mb-1 uppercase">Moisture Ratio</span>
+                <span className="text-[10px] font-black text-white/40 block tracking-widest mb-1 uppercase">Moisture Canopy</span>
                 <span className="text-3xl font-black block tracking-tight">{weather.humidity}%</span>
                 <span className="text-[11px] block text-white/40 font-medium mt-1">Relative value</span>
               </div>
@@ -342,16 +455,17 @@ export default function App() {
                 <span className="text-[11px] block text-white/40 font-medium mt-1">Rain likelihood</span>
               </div>
               <div className="bg-white/5 border border-white/5 p-4 rounded-2xl shadow-sm">
-                <span className="text-[10px] font-black text-white/40 block tracking-widest mb-1 uppercase">Wind Velocity</span>
+                <span className="text-[10px] font-black text-white/40 block tracking-widest mb-1 uppercase">Wind Vector</span>
                 <span className="text-3xl font-black block tracking-tight">{weather.windspeed} <span className="text-xs font-bold text-white/50">km/h</span></span>
-                <span className="text-[11px] block text-white/40 font-medium mt-1">Current vector</span>
+                <span className="text-[11px] block text-white/40 font-medium mt-1">Current dynamic</span>
               </div>
             </section>
           </div>
 
+          {/* Right Sided Chronological Lookahead Module */}
           <section className="lg:col-span-2 bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl h-full">
             <h3 className="text-xs font-black tracking-widest uppercase text-white/60 mb-6 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-blue-400 shadow-md animate-ping"></span> CHRONOLOGICAL HOURLY LOOKAHEAD (10H)
+              <span className="h-2 w-2 rounded-full bg-blue-400 shadow-md animate-ping"></span> TIME-SERIES CHRONO LOOKAHEAD (10-HOUR STEP INTERVALS)
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -376,6 +490,7 @@ export default function App() {
               })}
             </div>
           </section>
+
         </main>
       )}
     </div>
